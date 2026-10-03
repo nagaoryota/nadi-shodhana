@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#151a2b">
+<meta name="theme-color" content="#151a2b" id="metaTheme">
 <title>ナディーショーダナ</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -11,206 +11,309 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-  :root{
-    --phone:#151a2b; --text:#e9ecf4; --muted:#8b94aa; --dim:#5e6782;
-    --teal:#45dfb1; --purple:#a78bfa; --orange:#f0a365; --neutral:#737e97;
-    --empty:#232b42; --card:#232b42; --line:rgba(255,255,255,.07);
-    --tube-bg:#171d2e; --tube-fut:#141a2a; --tube-bd:#333d5c; --tube-bd-fut:#262e46; --tube-bd-act:#4a5679;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
-  body{
-    font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
-    background:#0d1120;color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;
-    display:flex;align-items:center;justify-content:center;overflow:hidden;
-  }
-  #app{
-    width:100%;max-width:430px;height:100%;max-height:900px;background:var(--phone);
-    position:relative;overflow:hidden;display:flex;flex-direction:column;
-  }
-  @media(min-width:460px) and (min-height:920px){ #app{border-radius:28px;height:860px;} }
+/* =========================================================
+   カラー方針（2テーマ共通ルール）
+   ・アクション色（ティール系） = 操作できる / 今アクティブ
+   ・ストリーク色（オレンジ系）  = 継続記録
+   ・呼吸フェーズ色            = 吸う(ティール) / 止める(バイオレット) / 吐く(オレンジ)
+   ・それ以外はすべてニュートラル階調
+   ライトテーマはダークと同じ色相を保ったまま、白地で読めるよう
+   明度を下げ彩度を上げた対応色に差し替える（淡い色は白地で沈むため）。
+   ========================================================= */
+:root{
+  --page:#0d1120;
+  --surface:#151a2b;
+  --text:#e9ecf4;
+  --muted:#8b94aa;
+  --dim:#7b85a0;      /* #151a2b 上で 4.70:1。小さい説明文(10.5px)の可読性を確保 */
+  --card:#232b42;
+  --line:rgba(255,255,255,.07);
+  --soft:rgba(255,255,255,.06);
+  --soft2:rgba(255,255,255,.05);
+  --softbd:rgba(255,255,255,.12);
+  --sheet:#1b2238;
+  --input:#111728;
+  --inputbd:#333d5c;
+  --btn2:#242c45;
+  --radio:#5a6490;
+  --swoff:#5a6490;
+  --swoffbd:rgba(255,255,255,.35);
 
-  .screen{
-    position:absolute;inset:0;display:none;flex-direction:column;
-    padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 18px);
-  }
-  .screen.on{display:flex;}
+  --action:#45dfb1;  --on-action:#06301f;  --action-soft:rgba(69,223,177,.15);
+  --streak:#f0a365;  --streak-bg:rgba(240,163,101,.14);
+  --c-in:#45dfb1;    --on-in:#06301f;
+  --c-hold:#a78bfa;  --on-hold:#2a1a4a;
+  --c-ex:#f0a365;    --on-ex:#4a2a05;
+  --sel-bg:#1b3a35;
 
-  .hdr{display:flex;align-items:center;justify-content:space-between;flex:none;min-height:28px;}
-  .hdr .ttl{font-size:14px;font-weight:700;}
-  .icobtn{font-size:18px;color:var(--muted);background:none;border:0;padding:4px 6px;cursor:pointer;font-family:inherit;}
-  .hdr-note{font-size:11px;color:var(--dim);margin-top:10px;text-align:center;flex:none;}
+  --tube-bg:#171d2e;
+  --tube-fut:#141a2a;
+  --tube-bd:#333d5c;
+  --tube-bd-fut:#262e46;
+  --tube-bd-act:#4a5679;
+  --tick:#414b6b;
+  --dot:#262e47;
+  --neutral:#737e97;
+  --nose:#4e5775;
+  --ovl:rgba(14,18,31,.9);
+  --shadow:rgba(0,0,0,.4);
 
-  /* ---------- HOME ---------- */
-  .logo{font-size:19px;font-weight:700;text-align:center;margin-top:26px;flex:none;}
-  .logo-sub{font-size:11.5px;color:var(--dim);text-align:center;margin-top:5px;flex:none;}
-  .start{
-    margin:auto auto 0;width:150px;height:150px;border-radius:50%;border:0;cursor:pointer;
-    background:radial-gradient(circle at 35% 30%,#6ef0c6,#2fb996);
-    color:#06301f;font-size:22px;font-weight:700;font-family:inherit;
-    box-shadow:0 0 0 9px rgba(69,223,177,.13);flex:none;
-  }
-  .start:active{transform:scale(.97);}
-  .cur-card{
-    margin:auto 0 0;width:100%;background:rgba(255,255,255,.06);border-radius:14px;
-    padding:13px 15px;border:0;cursor:pointer;font-family:inherit;text-align:left;color:inherit;flex:none;
-  }
-  .cur-card .r1{display:flex;justify-content:space-between;align-items:center;}
-  .cur-card .nm{font-size:15px;font-weight:700;}
-  .cur-card .cv{color:var(--muted);font-size:17px;}
-  .cur-card .mt{font-size:11.5px;color:var(--muted);margin-top:6px;}
-  .streak-wrap{text-align:center;margin-top:18px;flex:none;}
-  .streak{
-    display:inline-flex;align-items:center;gap:6px;background:rgba(240,163,101,.14);
-    color:var(--orange);padding:7px 15px;border-radius:20px;font-size:12.5px;font-weight:700;
-  }
+  --fs:1;
+  --bar:36px;
+}
+:root[data-theme="light"]{
+  --page:#dfe3ec;
+  --surface:#ffffff;
+  --text:#1b2130;
+  --muted:#5c6679;
+  --dim:#6b7586;      /* 白地で 4.65:1。小さい説明文(10.5px)に使うため AA を満たす値にする */
+  --card:#f2f4f8;
+  --line:rgba(0,0,0,.09);
+  --soft:rgba(0,0,0,.045);
+  --soft2:rgba(0,0,0,.035);
+  --softbd:rgba(0,0,0,.12);
+  --sheet:#ffffff;
+  --input:#f4f6fa;
+  --inputbd:#c7cedb;
+  --btn2:#eceff5;
+  --radio:#aeb6c6;
+  --swoff:#c2c9d6;
+  --swoffbd:rgba(0,0,0,.14);
 
-  /* ---------- ratio bar ---------- */
-  .ratio{display:flex;gap:2px;margin-top:9px;height:15px;border-radius:4px;overflow:hidden;}
-  .ratio>div{display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;}
-  .r-in{background:var(--teal);color:#06301f;}
-  .r-ho{background:var(--purple);color:#2a1a4a;}
-  .r-ex{background:var(--orange);color:#4a2a05;}
+  /* 白地で白文字を載せても、白地に文字として置いても AA(4.5:1) を満たす深さまで
+     明度を落としている。色相はダークと同じ（緑＝吸う/操作、紫＝止める、橙＝吐く/記録）。 */
+  --action:#087d5c;  --on-action:#ffffff;  --action-soft:rgba(8,125,92,.13);
+  --streak:#ad5f18;  --streak-bg:rgba(173,95,24,.12);
+  --c-in:#087d5c;    --on-in:#ffffff;
+  --c-hold:#6f4fe0;  --on-hold:#ffffff;
+  --c-ex:#ad5f18;    --on-ex:#ffffff;
+  --sel-bg:#e3f2ec;
 
-  /* ---------- PRESET LIST ---------- */
-  .list{flex:1;overflow-y:auto;margin-top:12px;-webkit-overflow-scrolling:touch;}
-  .pcard{
-    width:100%;background:var(--card);border-radius:14px;padding:13px 15px;margin-bottom:11px;
-    border:2px solid transparent;cursor:pointer;font-family:inherit;color:inherit;text-align:left;display:block;
-  }
-  .pcard.sel{border-color:var(--teal);background:#1b3a35;}
-  .pcard .r1{display:flex;justify-content:space-between;align-items:center;}
-  .rn{display:flex;align-items:center;gap:9px;}
-  .radio{width:16px;height:16px;border-radius:50%;border:2px solid #5a6490;position:relative;flex:none;}
-  .pcard.sel .radio{border-color:var(--teal);}
-  .pcard.sel .radio::after{content:"";position:absolute;top:2.5px;left:2.5px;width:7px;height:7px;border-radius:50%;background:var(--teal);}
-  .pnm{font-size:15px;font-weight:700;}
-  .cv{color:var(--muted);font-size:17px;}
-  .ind{margin-left:25px;}
-  .pmt{font-size:11.5px;color:var(--muted);margin-top:6px;}
-  .chip-lb{font-size:9.5px;color:var(--dim);margin-top:13px;letter-spacing:.04em;}
-  .chips{display:flex;gap:6px;margin-top:6px;}
-  .chip{
-    flex:1;padding:7px 0;border-radius:8px;text-align:center;font-size:11.5px;font-weight:700;
-    background:rgba(255,255,255,.07);color:var(--muted);border:1px solid rgba(255,255,255,.12);
-    cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;
-  }
-  .chip.on{background:var(--teal);color:#06301f;border-color:var(--teal);}
-  .chip.sm{font-size:10.5px;}
+  --tube-bg:#e6e9f0;
+  --tube-fut:#eef0f5;
+  --tube-bd:#ccd2de;
+  --tube-bd-fut:#dfe3eb;
+  --tube-bd-act:#aeb7c7;
+  --tick:#a8b1c2;
+  --dot:#dde1ea;
+  --neutral:#9aa3b4;
+  --nose:#98a1b2;
+  --ovl:rgba(255,255,255,.93);
+  --shadow:rgba(0,0,0,.18);
+}
 
-  /* ---------- rows ---------- */
-  .row{
-    width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:15px 2px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;
-    color:inherit;font-family:inherit;text-align:left;cursor:pointer;
-  }
-  .row:last-child{border-bottom:0;}
-  .rnm{font-size:13.5px;font-weight:600;}
-  .rds{font-size:10.5px;color:var(--dim);margin-top:3px;line-height:1.5;}
-  .sub{padding-left:15px;border-left:2px solid rgba(255,255,255,.08);}
-  .sw{width:44px;height:24px;border-radius:13px;position:relative;flex:none;transition:background .18s;}
-  .sw.on{background:var(--teal);}
-  .sw.off{background:#5a6490;border:1px solid rgba(255,255,255,.35);}
-  .kb{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:left .18s,right .18s;}
-  .sw.on .kb{right:2px;} .sw.off .kb{left:1px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+  background:var(--page);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+#app{
+  width:100%;max-width:430px;height:100%;max-height:900px;background:var(--surface);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+}
+@media(min-width:460px) and (min-height:920px){ #app{border-radius:28px;height:860px;} }
 
-  /* ---------- SESSION ---------- */
-  #session{padding-left:16px;padding-right:16px;}
-  .s-head{font-size:10.5px;color:var(--dim);text-align:center;letter-spacing:.04em;flex:none;}
-  .rigwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
-  .rig{position:relative;width:208px;height:232px;}
-  /* overflow:hidden を付けると .nose（左/右ラベル）が切れるため付けない。
-     .fill は 3px インセット＋角丸のため tube からはみ出さない。 */
-  .tube{position:absolute;background:var(--tube-bg);border:1.5px solid var(--tube-bd);border-radius:7px;}
-  .tube.h{top:0;left:0;right:0;height:36px;}
-  .tube.v{top:50px;bottom:0;width:36px;}
-  .tube.v.l{left:0;} .tube.v.r{right:0;}
-  .tube.fut{border-color:var(--tube-bd-fut);background:var(--tube-fut);}
-  .tube.act{border-color:var(--tube-bd-act);}
-  .fill{position:absolute;border-radius:4px;z-index:1;}
-  /* 目盛りは2層。空の部分でも全体の分割数が読めるよう、
-     下層＝明るい線（暗いトラック上で見える）／上層＝暗い線（色が乗った部分で隙間に見える） */
-  .tk{position:absolute;}
-  .tk-bg{background:#414b6b;z-index:0;}
-  .tk-fg{background:var(--tube-bg);z-index:2;}
-  .nose{position:absolute;bottom:-17px;font-size:9px;color:#4e5775;letter-spacing:.06em;width:36px;text-align:center;}
-  .nose.l{left:0;} .nose.r{right:0;}
-  .plab{text-align:center;font-size:16px;font-weight:700;flex:none;margin-top:14px;}
-  .pnum{text-align:center;flex:none;margin-top:4px;color:var(--muted);}
-  .pnum b{font-size:28px;font-weight:700;color:#fff;}
-  .pnum i{font-size:11.5px;color:var(--dim);margin-left:3px;font-style:normal;}
-  .dots{display:flex;align-items:center;justify-content:center;gap:5px;flex:none;margin-top:auto;padding-top:16px;flex-wrap:wrap;}
-  .dot{height:6px;border-radius:3px;background:#262e47;}
-  .dot.dn{background:var(--neutral);} .dot.cur{background:var(--teal);}
-  .taphint{text-align:center;font-size:10px;color:var(--dim);margin-top:12px;flex:none;}
+.screen{
+  position:absolute;inset:0;display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 18px);
+}
+.screen.on{display:flex;}
 
-  .ovl{
-    position:absolute;inset:0;background:rgba(14,18,31,.9);display:flex;flex-direction:column;
-    align-items:center;justify-content:center;padding:0 32px;z-index:5;
-  }
-  .ovl h3{font-size:17px;font-weight:700;}
-  .ovl p{font-size:11.5px;color:var(--dim);margin-top:8px;text-align:center;}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex:none;min-height:28px;}
+.hdr .ttl{font-size:calc(14px * var(--fs));font-weight:700;}
+.icobtn{font-size:calc(18px * var(--fs));color:var(--muted);background:none;border:0;padding:4px 6px;cursor:pointer;font-family:inherit;}
+.hdr-note{font-size:calc(11px * var(--fs));color:var(--dim);margin-top:10px;text-align:center;flex:none;}
 
-  .btn{
-    border-radius:12px;padding:14px 0;text-align:center;font-size:13.5px;font-weight:700;width:100%;
-    border:0;cursor:pointer;font-family:inherit;
-  }
-  .btn.p{background:var(--teal);color:#06301f;}
-  .btn.s{background:#242c45;color:var(--text);}
-  .btn+.btn{margin-top:10px;}
-  .btns{margin-top:auto;width:100%;flex:none;}
+/* ---------- HOME ---------- */
+.logo{font-size:calc(19px * var(--fs));font-weight:700;text-align:center;margin-top:26px;flex:none;}
+.logo-sub{font-size:calc(11.5px * var(--fs));color:var(--dim);text-align:center;margin-top:5px;flex:none;}
+.start{
+  margin:auto auto 0;width:150px;height:150px;border-radius:50%;border:0;cursor:pointer;
+  background:var(--action);color:var(--on-action);
+  font-size:calc(22px * var(--fs));font-weight:700;font-family:inherit;
+  box-shadow:0 0 0 9px var(--action-soft);flex:none;
+}
+.start:active{transform:scale(.97);}
+.cur-card{
+  margin:auto 0 0;width:100%;background:var(--soft);border-radius:14px;
+  padding:13px 15px;border:0;cursor:pointer;font-family:inherit;text-align:left;color:inherit;flex:none;
+}
+.cur-card .r1{display:flex;justify-content:space-between;align-items:center;}
+.cur-card .nm{font-size:calc(15px * var(--fs));font-weight:700;}
+.cur-card .mt{font-size:calc(11.5px * var(--fs));color:var(--muted);margin-top:6px;}
+.cv{color:var(--muted);font-size:calc(17px * var(--fs));}
+.streak-wrap{text-align:center;margin-top:18px;flex:none;}
+.streak{
+  display:inline-flex;align-items:center;gap:6px;background:var(--streak-bg);
+  color:var(--streak);padding:7px 15px;border-radius:20px;font-size:calc(12.5px * var(--fs));font-weight:700;
+}
 
-  /* ---------- DONE ---------- */
-  .chk{
-    margin:34px auto 0;width:78px;height:78px;border-radius:50%;background:rgba(69,223,177,.15);
-    display:flex;align-items:center;justify-content:center;font-size:38px;color:var(--teal);position:relative;flex:none;
-  }
-  .flame{
-    position:absolute;bottom:-4px;right:-7px;width:26px;height:26px;border-radius:50%;
-    background:var(--phone);display:flex;align-items:center;justify-content:center;border:2px solid #0f1322;
-  }
-  .dttl{margin-top:16px;font-size:19px;font-weight:700;text-align:center;flex:none;}
-  .stats{width:100%;margin-top:20px;display:flex;flex-direction:column;gap:9px;flex:none;}
-  .st{display:flex;justify-content:space-between;font-size:12.5px;background:rgba(255,255,255,.05);padding:11px 13px;border-radius:10px;}
-  .st .k{color:var(--muted);}
-  .st .v{font-weight:700;}
+/* ---------- ratio bar ---------- */
+.ratio{display:flex;gap:2px;margin-top:9px;height:calc(15px * var(--fs));border-radius:4px;overflow:hidden;}
+.ratio>div{display:flex;align-items:center;justify-content:center;font-size:calc(8.5px * var(--fs));font-weight:700;}
+.r-in{background:var(--c-in);color:var(--on-in);}
+.r-ho{background:var(--c-hold);color:var(--on-hold);}
+.r-ex{background:var(--c-ex);color:var(--on-ex);}
 
-  /* ---------- sheet / inputs ---------- */
-  .sheet{position:absolute;inset:0;background:rgba(10,13,24,.72);display:flex;align-items:flex-end;z-index:9;}
-  .sheet-in{width:100%;background:#1b2238;border-radius:18px 18px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 22px);}
-  .sheet h4{font-size:14px;font-weight:700;}
-  .sheet .hint{font-size:11px;color:var(--dim);margin-top:6px;}
-  .num{
-    width:100%;margin-top:14px;background:#111728;border:1px solid #333d5c;border-radius:10px;
-    color:var(--text);font-size:19px;font-weight:700;text-align:center;padding:12px 0;font-family:inherit;
-  }
-  .num:focus{outline:none;border-color:var(--teal);}
-  .frow{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);}
-  .frow label{font-size:13px;font-weight:600;}
-  .frow input{
-    width:84px;background:#111728;border:1px solid #333d5c;border-radius:9px;color:var(--text);
-    font-size:15px;font-weight:700;text-align:center;padding:9px 0;font-family:inherit;
-  }
-  .frow input:focus{outline:none;border-color:var(--teal);}
-  .empty{font-size:12px;color:var(--dim);text-align:center;margin-top:40px;}
-  .hitem{background:rgba(255,255,255,.05);border-radius:10px;padding:11px 13px;margin-bottom:8px;font-size:12px;}
-  .hitem .d{color:var(--muted);font-size:10.5px;margin-top:3px;}
-  .about{font-size:12.5px;color:var(--muted);line-height:1.9;margin-top:16px;}
+/* ---------- lists / presets ---------- */
+.list{flex:1;overflow-y:auto;margin-top:12px;-webkit-overflow-scrolling:touch;}
+.pcard{
+  width:100%;background:var(--card);border-radius:14px;padding:13px 15px;margin-bottom:11px;
+  border:2px solid transparent;cursor:pointer;font-family:inherit;color:inherit;text-align:left;display:block;
+}
+.pcard.sel{border-color:var(--action);background:var(--sel-bg);}
+.pcard .r1{display:flex;justify-content:space-between;align-items:center;}
+.rn{display:flex;align-items:center;gap:9px;}
+.radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--radio);position:relative;flex:none;}
+.pcard.sel .radio{border-color:var(--action);}
+.pcard.sel .radio::after{content:"";position:absolute;top:2.5px;left:2.5px;width:7px;height:7px;border-radius:50%;background:var(--action);}
+.pnm{font-size:calc(15px * var(--fs));font-weight:700;}
+.ind{margin-left:25px;}
+.pmt{font-size:calc(11.5px * var(--fs));color:var(--muted);margin-top:6px;}
+.chip-lb{font-size:calc(9.5px * var(--fs));color:var(--dim);margin-top:13px;letter-spacing:.04em;}
+.chips{display:flex;gap:6px;margin-top:6px;}
+.chip{
+  flex:1;padding:7px 2px;border-radius:8px;text-align:center;font-size:calc(11.5px * var(--fs));font-weight:700;
+  background:var(--soft);color:var(--muted);border:1px solid var(--softbd);
+  cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;
+}
+.chip.on{background:var(--action);color:var(--on-action);border-color:var(--action);}
+.chip.sm{font-size:calc(10.5px * var(--fs));}
+
+/* ---------- rows ---------- */
+.row{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:15px 2px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;
+  color:inherit;font-family:inherit;text-align:left;cursor:pointer;
+}
+.row:last-child{border-bottom:0;}
+.rnm{font-size:calc(13.5px * var(--fs));font-weight:600;}
+.rds{font-size:calc(10.5px * var(--fs));color:var(--dim);margin-top:3px;line-height:1.5;}
+.sub{padding-left:15px;border-left:2px solid var(--softbd);}
+.sw{width:44px;height:24px;border-radius:13px;position:relative;flex:none;transition:background .18s;}
+.sw.on{background:var(--action);}
+.sw.off{background:var(--swoff);border:1px solid var(--swoffbd);}
+.kb{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px var(--shadow);transition:left .18s,right .18s;}
+.sw.on .kb{right:2px;} .sw.off .kb{left:1px;}
+
+/* ---------- 表示設定 ---------- */
+.grp{margin-bottom:22px;}
+.grp-lb{font-size:calc(11px * var(--fs));font-weight:700;color:var(--muted);margin-bottom:8px;}
+.grp .chips{margin-top:0;}
+
+/* ---------- SESSION ---------- */
+#session{padding-left:16px;padding-right:16px;}
+.s-head{font-size:calc(10.5px * var(--fs));color:var(--dim);text-align:center;letter-spacing:.04em;flex:none;}
+.rigwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
+.rig{position:relative;width:208px;height:232px;}
+.tube{position:absolute;background:var(--tube-bg);border:1.5px solid var(--tube-bd);border-radius:7px;}
+.tube.h{top:0;left:0;right:0;height:var(--bar);}
+.tube.v{top:calc(var(--bar) + 14px);bottom:0;width:var(--bar);}
+.tube.v.l{left:0;} .tube.v.r{right:0;}
+.tube.fut{border-color:var(--tube-bd-fut);background:var(--tube-fut);}
+.tube.act{border-color:var(--tube-bd-act);}
+.fill{position:absolute;border-radius:4px;z-index:1;}
+.tk{position:absolute;}
+.tk-bg{background:var(--tick);z-index:0;}
+.tk-fg{background:var(--tube-bg);z-index:2;}
+.nose{position:absolute;bottom:-17px;font-size:calc(9px * var(--fs));color:var(--nose);letter-spacing:.06em;width:var(--bar);text-align:center;}
+.nose.l{left:0;} .nose.r{right:0;}
+.plab{text-align:center;font-size:calc(16px * var(--fs));font-weight:700;flex:none;margin-top:14px;}
+.pnum{text-align:center;flex:none;margin-top:4px;color:var(--muted);}
+.pnum b{font-size:calc(28px * var(--fs));font-weight:700;color:var(--text);}
+.pnum i{font-size:calc(11.5px * var(--fs));color:var(--dim);margin-left:3px;font-style:normal;}
+.dots{display:flex;align-items:center;justify-content:center;gap:5px;flex:none;margin-top:auto;padding-top:16px;flex-wrap:wrap;}
+.dot{height:6px;border-radius:3px;background:var(--dot);}
+.dot.dn{background:var(--neutral);} .dot.cur{background:var(--action);}
+.taphint{text-align:center;font-size:calc(10px * var(--fs));color:var(--dim);margin-top:12px;flex:none;}
+
+.ovl{
+  position:absolute;inset:0;background:var(--ovl);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:0 32px;z-index:5;
+}
+.ovl h3{font-size:calc(17px * var(--fs));font-weight:700;}
+.ovl p{font-size:calc(11.5px * var(--fs));color:var(--dim);margin-top:8px;text-align:center;}
+
+.btn{
+  border-radius:12px;padding:14px 0;text-align:center;font-size:calc(13.5px * var(--fs));font-weight:700;width:100%;
+  border:0;cursor:pointer;font-family:inherit;
+}
+.btn.p{background:var(--action);color:var(--on-action);}
+.btn.s{background:var(--btn2);color:var(--text);}
+.btn+.btn{margin-top:10px;}
+.btns{margin-top:auto;width:100%;flex:none;}
+
+/* ---------- DONE ---------- */
+.chk{
+  margin:34px auto 0;width:78px;height:78px;border-radius:50%;
+  background:var(--action-soft);
+  display:flex;align-items:center;justify-content:center;font-size:calc(38px * var(--fs));color:var(--action);position:relative;flex:none;
+}
+.flame{
+  position:absolute;bottom:-4px;right:-7px;width:26px;height:26px;border-radius:50%;
+  background:var(--surface);display:flex;align-items:center;justify-content:center;border:2px solid var(--page);
+}
+.dttl{margin-top:16px;font-size:calc(19px * var(--fs));font-weight:700;text-align:center;flex:none;}
+.stats{width:100%;margin-top:20px;display:flex;flex-direction:column;gap:9px;flex:none;}
+.st{display:flex;justify-content:space-between;font-size:calc(12.5px * var(--fs));background:var(--soft2);padding:11px 13px;border-radius:10px;}
+.st .k{color:var(--muted);}
+.st .v{font-weight:700;}
+
+/* ---------- sheet / inputs ---------- */
+.sheet{position:absolute;inset:0;background:rgba(10,13,24,.72);display:flex;align-items:flex-end;z-index:9;}
+.sheet-in{width:100%;background:var(--sheet);border-radius:18px 18px 0 0;padding:22px 20px calc(env(safe-area-inset-bottom) + 22px);}
+.sheet h4{font-size:calc(14px * var(--fs));font-weight:700;}
+.sheet .hint{font-size:calc(11px * var(--fs));color:var(--dim);margin-top:6px;}
+.num{
+  width:100%;margin-top:14px;background:var(--input);border:1px solid var(--inputbd);border-radius:10px;
+  color:var(--text);font-size:calc(19px * var(--fs));font-weight:700;text-align:center;padding:12px 0;font-family:inherit;
+}
+.num:focus{outline:none;border-color:var(--action);}
+.frow{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);}
+.frow label{font-size:calc(13px * var(--fs));font-weight:600;}
+.frow input{
+  width:84px;background:var(--input);border:1px solid var(--inputbd);border-radius:9px;color:var(--text);
+  font-size:calc(15px * var(--fs));font-weight:700;text-align:center;padding:9px 0;font-family:inherit;
+}
+.frow input:focus{outline:none;border-color:var(--action);}
+.empty{font-size:calc(12px * var(--fs));color:var(--dim);text-align:center;margin-top:40px;}
+.hitem{background:var(--soft2);border-radius:10px;padding:11px 13px;margin-bottom:8px;font-size:calc(12px * var(--fs));}
+.hitem .d{color:var(--muted);font-size:calc(10.5px * var(--fs));margin-top:3px;}
+.about{font-size:calc(12.5px * var(--fs));color:var(--muted);line-height:1.9;margin-top:16px;}
+
+/* ---------- onboarding ---------- */
+.ob-ttl{font-size:calc(20px * var(--fs));font-weight:700;text-align:center;margin-top:20px;flex:none;}
+.ob-sub{font-size:calc(11.5px * var(--fs));color:var(--dim);text-align:center;margin-top:7px;flex:none;}
 </style>
 </head>
 <body>
 <div id="app">
 
+  <!-- ===== ONBOARDING ===== -->
+  <section class="screen" id="onboard">
+    <div class="ob-ttl" data-i="ob.title"></div>
+    <div class="ob-sub" data-i="ob.sub"></div>
+    <div class="list" style="margin-top:22px">
+      <div class="grp"><div class="grp-lb" data-i="disp.lang"></div><div class="chips" id="obLang"></div></div>
+      <div class="grp"><div class="grp-lb" data-i="disp.theme"></div><div class="chips" id="obTheme"></div></div>
+      <div class="grp"><div class="grp-lb" data-i="disp.fs"></div><div class="chips" id="obFs"></div></div>
+      <div class="grp"><div class="grp-lb" data-i="disp.bar"></div><div class="chips" id="obBar"></div></div>
+    </div>
+    <div class="btns"><button class="btn p" id="obDone" data-i="ob.start"></button></div>
+  </section>
+
   <!-- ===== HOME ===== -->
-  <section class="screen on" id="home">
+  <section class="screen" id="home">
     <div class="hdr"><span></span><button class="icobtn" data-go="hub">⚙︎</button></div>
-    <div class="logo">ナディーショーダナ</div>
-    <div class="logo-sub">片鼻呼吸法で心をととのえる</div>
-    <button class="start" id="btnStart">開始</button>
+    <div class="logo" data-i="app.name"></div>
+    <div class="logo-sub" data-i="app.sub"></div>
+    <button class="start" id="btnStart" data-i="home.start"></button>
     <button class="cur-card" data-go="presets">
-      <div class="r1"><span class="nm" id="hNm">4-8-8</span><span class="cv">›</span></div>
+      <div class="r1"><span class="nm" id="hNm"></span><span class="cv">›</span></div>
       <div class="ratio" id="hRatio"></div>
-      <div class="mt" id="hMeta">8ラウンド · 約5分20秒</div>
+      <div class="mt" id="hMeta"></div>
     </button>
     <div class="streak-wrap"><span class="streak" id="hStreak"></span></div>
   </section>
@@ -219,9 +322,9 @@
   <section class="screen" id="presets">
     <div class="hdr">
       <button class="icobtn" data-go="home">←</button>
-      <span class="ttl">プリセットを選ぶ</span><span style="width:26px"></span>
+      <span class="ttl" data-i="preset.title"></span><span style="width:26px"></span>
     </div>
-    <div class="hdr-note">数字は 吸う・止める・吐く の秒数です</div>
+    <div class="hdr-note" data-i="preset.note"></div>
     <div class="list" id="pList"></div>
   </section>
 
@@ -229,31 +332,48 @@
   <section class="screen" id="custom">
     <div class="hdr">
       <button class="icobtn" data-go="presets">←</button>
-      <span class="ttl">カスタム</span><span style="width:26px"></span>
+      <span class="ttl" data-i="custom.title"></span><span style="width:26px"></span>
     </div>
-    <div class="hdr-note">秒数とラウンド数を自由に設定できます</div>
+    <div class="hdr-note" data-i="custom.note"></div>
     <div class="list">
-      <div class="frow"><label>吸う（秒）</label><input type="number" id="cIn" min="1" max="30" inputmode="numeric"></div>
-      <div class="frow"><label>止める（秒）</label><input type="number" id="cHo" min="0" max="40" inputmode="numeric"></div>
-      <div class="frow"><label>吐く（秒）</label><input type="number" id="cEx" min="1" max="40" inputmode="numeric"></div>
-      <div class="frow"><label>ラウンド数</label><input type="number" id="cRd" min="3" max="20" inputmode="numeric"></div>
+      <div class="frow"><label data-i="custom.inhale"></label><input type="number" id="cIn" min="1" max="30" inputmode="numeric"></div>
+      <div class="frow"><label data-i="custom.hold"></label><input type="number" id="cHo" min="0" max="40" inputmode="numeric"></div>
+      <div class="frow"><label data-i="custom.exhale"></label><input type="number" id="cEx" min="1" max="40" inputmode="numeric"></div>
+      <div class="frow"><label data-i="custom.rounds"></label><input type="number" id="cRd" min="3" max="20" inputmode="numeric"></div>
       <div class="ratio" id="cRatio" style="margin-top:20px"></div>
       <div class="pmt" id="cMeta" style="text-align:center;margin-top:10px"></div>
     </div>
-    <div class="btns"><button class="btn p" id="cSave">このプリセットを使う</button></div>
+    <div class="btns"><button class="btn p" id="cSave" data-i="custom.use"></button></div>
   </section>
 
   <!-- ===== SETTINGS HUB ===== -->
   <section class="screen" id="hub">
     <div class="hdr">
       <button class="icobtn" data-go="home">←</button>
-      <span class="ttl">設定</span><span style="width:26px"></span>
+      <span class="ttl" data-i="hub.title"></span><span style="width:26px"></span>
     </div>
     <div class="list" style="margin-top:6px">
-      <button class="row" data-go="notif"><span class="rnm">通知設定</span><span class="cv">›</span></button>
-      <button class="row" data-go="theme"><span class="rnm">テーマ（ダーク/ライト）</span><span class="cv">›</span></button>
-      <button class="row" data-go="history"><span class="rnm">データ・実施履歴</span><span class="cv">›</span></button>
-      <button class="row" data-go="about"><span class="rnm">アプリについて</span><span class="cv">›</span></button>
+      <button class="row" data-go="notif"><span class="rnm" data-i="hub.notif"></span><span class="cv">›</span></button>
+      <button class="row" data-go="display"><span class="rnm" data-i="hub.display"></span><span class="cv">›</span></button>
+      <button class="row" data-go="history"><span class="rnm" data-i="hub.data"></span><span class="cv">›</span></button>
+      <button class="row" data-go="about"><span class="rnm" data-i="hub.about"></span><span class="cv">›</span></button>
+    </div>
+  </section>
+
+  <!-- ===== DISPLAY ===== -->
+  <section class="screen" id="display">
+    <div class="hdr">
+      <button class="icobtn" data-go="hub">←</button>
+      <span class="ttl" data-i="hub.display"></span><span style="width:26px"></span>
+    </div>
+    <div class="list" style="margin-top:14px">
+      <div class="grp"><div class="grp-lb" data-i="disp.lang"></div><div class="chips" id="dpLang"></div></div>
+      <div class="grp"><div class="grp-lb" data-i="disp.theme"></div><div class="chips" id="dpTheme"></div></div>
+      <div class="grp"><div class="grp-lb" data-i="disp.fs"></div><div class="chips" id="dpFs"></div></div>
+      <div class="grp">
+        <div class="grp-lb" data-i="disp.bar"></div><div class="chips" id="dpBar"></div>
+        <div class="rigwrap" style="flex:none;margin-top:18px"><div class="rig" id="barPrev" style="transform:scale(.62);transform-origin:center"></div></div>
+      </div>
     </div>
   </section>
 
@@ -261,41 +381,29 @@
   <section class="screen" id="notif">
     <div class="hdr">
       <button class="icobtn" data-go="hub">←</button>
-      <span class="ttl">通知設定</span><span style="width:26px"></span>
+      <span class="ttl" data-i="hub.notif"></span><span style="width:26px"></span>
     </div>
     <div class="list" style="margin-top:6px">
       <div class="row" data-tg="sound">
-        <div><div class="rnm">音（チャイム）</div><div class="rds">フェーズ切り替え時にベル音</div></div>
+        <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
       <div class="row sub" data-tg="tick">
-        <div><div class="rnm">秒ごとのティック</div><div class="rds">目盛りを1本通過するごとに微細な音。画面を見ずに秒を数えられる</div></div>
+        <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
       <div class="row" data-tg="vibe">
-        <div><div class="rnm">バイブレーション</div><div class="rds">画面を見なくても振動で分かる</div></div>
+        <div><div class="rnm" data-i="nt.vibe"></div><div class="rds" data-i="nt.vibeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
       <div class="row" data-tg="voice">
-        <div><div class="rnm">音声ガイド</div><div class="rds">「左から吸って」等を読み上げ</div></div>
+        <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
       <div class="row" data-tg="wake">
-        <div><div class="rnm">画面を消さない</div><div class="rds">セッション中は自動ロックを抑止</div></div>
+        <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
-    </div>
-  </section>
-
-  <!-- ===== THEME ===== -->
-  <section class="screen" id="theme">
-    <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
-      <span class="ttl">テーマ</span><span style="width:26px"></span>
-    </div>
-    <div class="list" style="margin-top:6px">
-      <div class="row"><div><div class="rnm">ダーク</div><div class="rds">現在のテーマ</div></div><span style="color:var(--teal)">✓</span></div>
-      <div class="row" style="opacity:.45"><div><div class="rnm">ライト</div><div class="rds">準備中</div></div><span class="cv">›</span></div>
     </div>
   </section>
 
@@ -303,26 +411,19 @@
   <section class="screen" id="history">
     <div class="hdr">
       <button class="icobtn" data-go="hub">←</button>
-      <span class="ttl">データ・実施履歴</span><span style="width:26px"></span>
+      <span class="ttl" data-i="hub.data"></span><span style="width:26px"></span>
     </div>
     <div class="list" id="hList" style="margin-top:12px"></div>
-    <div class="btns"><button class="btn s" id="hClear">記録をすべて消去</button></div>
+    <div class="btns"><button class="btn s" id="hClear" data-i="hist.clear"></button></div>
   </section>
 
   <!-- ===== ABOUT ===== -->
   <section class="screen" id="about">
     <div class="hdr">
       <button class="icobtn" data-go="hub">←</button>
-      <span class="ttl">アプリについて</span><span style="width:26px"></span>
+      <span class="ttl" data-i="hub.about"></span><span style="width:26px"></span>
     </div>
-    <div class="list">
-      <div class="about">
-        ナディーショーダナ（片鼻呼吸法）のためのガイドアプリです。<br><br>
-        1ラウンドは「左から吸う → 止める → 右から吐く → 右から吸う → 止める → 左から吐く」の6フェーズで構成されます。<br><br>
-        縦のバーは上端を固定して高さが増減します。減る＝吸う、増える＝吐く。上のバーは止めている間、息が入ってきた側から減っていきます。<br><br>
-        <span style="color:var(--dim)">プロトタイプ版 0.1</span>
-      </div>
-    </div>
+    <div class="list"><div class="about" id="aboutBody"></div></div>
   </section>
 
   <!-- ===== SESSION ===== -->
@@ -331,31 +432,31 @@
     <div class="rigwrap">
       <div class="rig">
         <div class="tube h" id="bTop"><div class="fill"></div></div>
-        <div class="tube v l" id="bLeft"><div class="fill"></div><span class="nose l">左</span></div>
-        <div class="tube v r" id="bRight"><div class="fill"></div><span class="nose r">右</span></div>
+        <div class="tube v l" id="bLeft"><div class="fill"></div><span class="nose l" id="noseL"></span></div>
+        <div class="tube v r" id="bRight"><div class="fill"></div><span class="nose r" id="noseR"></span></div>
       </div>
     </div>
     <div class="plab" id="sLabel"></div>
     <div class="pnum"><b id="sNum">0</b><i id="sDur"></i></div>
     <div class="dots" id="sDots"></div>
-    <div class="taphint">画面をタップすると一時停止します</div>
+    <div class="taphint" data-i="sess.taphint"></div>
   </section>
 
   <!-- ===== DONE ===== -->
   <section class="screen" id="done">
     <div class="chk">✓<div class="flame">
-      <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C9 6 6 8.5 6 13a6 6 0 0 0 12 0c0-2.3-1-4.2-2.3-5.8-.4 1.3-1.1 2.1-1.9 2.1-1 0-1.6-.8-1.4-2C12.6 5.6 12.3 3.8 12 2z" fill="#f0a365"/></svg>
+      <svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2C9 6 6 8.5 6 13a6 6 0 0 0 12 0c0-2.3-1-4.2-2.3-5.8-.4 1.3-1.1 2.1-1.9 2.1-1 0-1.6-.8-1.4-2C12.6 5.6 12.3 3.8 12 2z" fill="currentColor" style="color:var(--streak)"/></svg>
     </div></div>
-    <div class="dttl">セッション完了！</div>
+    <div class="dttl" data-i="done.title"></div>
     <div style="text-align:center;margin-top:12px;flex:none"><span class="streak" id="dStreak"></span></div>
     <div class="stats">
-      <div class="st"><span class="k">実施ラウンド</span><span class="v" id="dRounds"></span></div>
-      <div class="st"><span class="k">所要時間</span><span class="v" id="dTime"></span></div>
-      <div class="st"><span class="k">プリセット</span><span class="v" id="dPreset"></span></div>
+      <div class="st"><span class="k" data-i="done.rounds"></span><span class="v" id="dRounds"></span></div>
+      <div class="st"><span class="k" data-i="done.time"></span><span class="v" id="dTime"></span></div>
+      <div class="st"><span class="k" data-i="done.preset"></span><span class="v" id="dPreset"></span></div>
     </div>
     <div class="btns">
-      <button class="btn p" data-go="home">ホームに戻る</button>
-      <button class="btn s" id="dAgain">もう一度行う</button>
+      <button class="btn p" data-go="home" data-i="done.home"></button>
+      <button class="btn s" id="dAgain" data-i="done.again"></button>
     </div>
   </section>
 
@@ -366,10 +467,78 @@
 "use strict";
 
 /* =========================================================
-   定数・データ
+   文言（ja / en）
    ========================================================= */
-const FLAME = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 6 8.5 6 13a6 6 0 0 0 12 0c0-2.3-1-4.2-2.3-5.8-.4 1.3-1.1 2.1-1.9 2.1-1 0-1.6-.8-1.4-2C12.6 5.6 12.3 3.8 12 2z" fill="#f0a365"/></svg>';
+const T={
+ja:{
+ 'app.name':'ナディーショーダナ','app.sub':'片鼻呼吸法で心をととのえる',
+ 'home.start':'開始','home.nostreak':'まだ記録がありません',
+ 'preset.title':'プリセットを選ぶ','preset.note':'数字は 吸う・止める・吐く の秒数です',
+ 'preset.rounds':'ラウンド数','preset.other':'その他',
+ 'custom.title':'カスタム','custom.note':'秒数とラウンド数を自由に設定できます',
+ 'custom.inhale':'吸う（秒）','custom.hold':'止める（秒）','custom.exhale':'吐く（秒）',
+ 'custom.rounds':'ラウンド数','custom.use':'このプリセットを使う','custom.desc':'秒数・ラウンド数を自由に設定',
+ 'hub.title':'設定','hub.notif':'通知設定','hub.display':'表示設定','hub.data':'データ・実施履歴','hub.about':'アプリについて',
+ 'disp.lang':'言語','disp.theme':'テーマ','disp.fs':'文字の大きさ','disp.bar':'バーの太さ',
+ 'th.dark':'ダーク','th.light':'ライト',
+ 'fs.s':'小','fs.m':'中','fs.l':'大',
+ 'bar.s':'細い','bar.m':'普通','bar.l':'太い',
+ 'nt.sound':'音（チャイム）','nt.soundD':'フェーズ切り替え時にベル音',
+ 'nt.tick':'秒ごとのティック','nt.tickD':'目盛りを1本通過するごとに微細な音。画面を見ずに秒を数えられる',
+ 'nt.vibe':'バイブレーション','nt.vibeD':'画面を見なくても振動で分かる',
+ 'nt.voice':'音声ガイド','nt.voiceD':'「左から吸って」等を読み上げ',
+ 'nt.wake':'画面を消さない','nt.wakeD':'セッション中は自動ロックを抑止',
+ 'hist.clear':'記録をすべて消去','hist.empty':'まだ実施記録がありません','hist.rounds':'ラウンド',
+ 'sess.taphint':'画面をタップすると一時停止します','sess.round':'ラウンド',
+ 'sess.paused':'一時停止中','sess.resume':'再開する','sess.end':'セッションを終了',
+ 'ph.inL':'左から・吸う','ph.inR':'右から・吸う','ph.hold':'止める（両鼻）','ph.exL':'左から・吐く','ph.exR':'右から・吐く',
+ 'vo.inL':'左から吸って','vo.inR':'右から吸って','vo.hold':'止めて','vo.exL':'左から吐いて','vo.exR':'右から吐いて',
+ 'nose.l':'左','nose.r':'右',
+ 'done.title':'セッション完了！','done.rounds':'実施ラウンド','done.time':'所要時間','done.preset':'プリセット',
+ 'done.home':'ホームに戻る','done.again':'もう一度行う',
+ 'ob.title':'ようこそ','ob.sub':'表示のしかたを選んでください。あとから設定でいつでも変更できます。','ob.start':'はじめる',
+ 'u.rounds':'ラウンド','u.about':'約','u.streak':'日連続','u.min':'分','u.sec':'秒','u.custom':'カスタム',
+ 'sheet.rounds':'ラウンド数','sheet.roundsHint':'3〜20の範囲で指定できます','sheet.ok':'決定','sheet.cancel':'キャンセル',
+ 'about.body':'ナディーショーダナ（片鼻呼吸法）のためのガイドアプリです。<br><br>1ラウンドは「左から吸う → 止める → 右から吐く → 右から吸う → 止める → 左から吐く」の6フェーズで構成されます。<br><br>縦のバーは上端を固定して高さが増減します。減る＝吸う、増える＝吐く。上のバーは止めている間、息が入ってきた側から減っていきます。<br><br>記録は端末内にのみ保存されます。'
+},
+en:{
+ 'app.name':'Nadi Shodhana','app.sub':'Alternate nostril breathing',
+ 'home.start':'Start','home.nostreak':'No records yet',
+ 'preset.title':'Choose a preset','preset.note':'Numbers are seconds for inhale, hold and exhale',
+ 'preset.rounds':'Rounds','preset.other':'Other',
+ 'custom.title':'Custom','custom.note':'Set the seconds and rounds freely',
+ 'custom.inhale':'Inhale (sec)','custom.hold':'Hold (sec)','custom.exhale':'Exhale (sec)',
+ 'custom.rounds':'Rounds','custom.use':'Use this preset','custom.desc':'Set seconds and rounds freely',
+ 'hub.title':'Settings','hub.notif':'Notifications','hub.display':'Display','hub.data':'Data & history','hub.about':'About',
+ 'disp.lang':'Language','disp.theme':'Theme','disp.fs':'Text size','disp.bar':'Bar thickness',
+ 'th.dark':'Dark','th.light':'Light',
+ 'fs.s':'Small','fs.m':'Medium','fs.l':'Large',
+ 'bar.s':'Thin','bar.m':'Normal','bar.l':'Thick',
+ 'nt.sound':'Sound (chime)','nt.soundD':'A bell at each phase change',
+ 'nt.tick':'Tick every second','nt.tickD':'A faint tick as each mark is passed, so you can count without looking',
+ 'nt.vibe':'Vibration','nt.vibeD':'Feel each change without looking at the screen',
+ 'nt.voice':'Voice guide','nt.voiceD':'Reads out “Inhale through the left” and so on',
+ 'nt.wake':'Keep screen on','nt.wakeD':'Prevents auto-lock during a session',
+ 'hist.clear':'Clear all records','hist.empty':'No sessions recorded yet','hist.rounds':'rounds',
+ 'sess.taphint':'Tap anywhere to pause','sess.round':'Round',
+ 'sess.paused':'Paused','sess.resume':'Resume','sess.end':'End session',
+ 'ph.inL':'Inhale · left','ph.inR':'Inhale · right','ph.hold':'Hold (both)','ph.exL':'Exhale · left','ph.exR':'Exhale · right',
+ 'vo.inL':'Inhale through the left','vo.inR':'Inhale through the right','vo.hold':'Hold','vo.exL':'Exhale through the left','vo.exR':'Exhale through the right',
+ 'nose.l':'L','nose.r':'R',
+ 'done.title':'Session complete','done.rounds':'Rounds','done.time':'Duration','done.preset':'Preset',
+ 'done.home':'Back to home','done.again':'Do it again',
+ 'ob.title':'Welcome','ob.sub':'Choose how things should look. You can change this anytime in Settings.','ob.start':'Get started',
+ 'u.rounds':'rounds','u.about':'about','u.streak':'day streak','u.min':'min','u.sec':'sec','u.custom':'Custom',
+ 'sheet.rounds':'Rounds','sheet.roundsHint':'Choose a number between 3 and 20','sheet.ok':'OK','sheet.cancel':'Cancel',
+ 'about.body':'A guide app for Nadi Shodhana (alternate nostril breathing).<br><br>One round has six phases: inhale left → hold → exhale right → inhale right → hold → exhale left.<br><br>The vertical bars are anchored at the top and change in height: shrinking means inhaling, growing means exhaling. While you hold, the top bar empties from the side the breath came in.<br><br>All records stay on your device.'
+}};
+function t(k){ return (T[S.lang]&&T[S.lang][k]) || T.ja[k] || k; }
 
+const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 6 8.5 6 13a6 6 0 0 0 12 0c0-2.3-1-4.2-2.3-5.8-.4 1.3-1.1 2.1-1.9 2.1-1 0-1.6-.8-1.4-2C12.6 5.6 12.3 3.8 12 2z" fill="currentColor"/></svg>';
+
+/* =========================================================
+   定数
+   ========================================================= */
 const PRESETS=[
   {id:'4-8-8',   inhale:4, hold:8,  exhale:8,  def:8},
   {id:'6-12-12', inhale:6, hold:12, exhale:12, def:5},
@@ -378,36 +547,37 @@ const PRESETS=[
 const CHIPS=[5,8,12];
 const MIN_R=3, MAX_R=20;
 /* 目盛りは「秒数＝分割数」。本数で上限を切ると 4-16-8 の止める16秒のような
-   標準プリセットまで消えてしまうため、1マスの実寸(px)で判定する。
-   横バー(約199px)なら24分割、縦バー(約173px)なら21分割まで目盛りが出る。 */
+   標準プリセットまで消えるため、1マスの実寸(px)で判定する。 */
 const MIN_TICK_PX=8;
+const FS={s:.88,m:1,l:1.18};
+const BARW={s:'28px',m:'36px',l:'46px'};
 
-/* 1ラウンド＝6フェーズ（左右両方） */
 function phasesOf(p){
   return [
-    {k:'inhale', dur:p.inhale, lab:'左から・吸う',   col:'teal',   bar:'left',  voice:'左から吸って'},
-    {k:'hold',   dur:p.hold,   lab:'止める（両鼻）', col:'purple', bar:'top',   dir:'ltr', voice:'止めて'},
-    {k:'exhale', dur:p.exhale, lab:'右から・吐く',   col:'orange', bar:'right', voice:'右から吐いて'},
-    {k:'inhale', dur:p.inhale, lab:'右から・吸う',   col:'teal',   bar:'right', voice:'右から吸って'},
-    {k:'hold',   dur:p.hold,   lab:'止める（両鼻）', col:'purple', bar:'top',   dir:'rtl', voice:'止めて'},
-    {k:'exhale', dur:p.exhale, lab:'左から・吐く',   col:'orange', bar:'left',  voice:'左から吐いて'},
+    {k:'inhale', dur:p.inhale, lab:'ph.inL', col:'in',   bar:'left',  vo:'vo.inL'},
+    {k:'hold',   dur:p.hold,   lab:'ph.hold',col:'hold', bar:'top', dir:'ltr', vo:'vo.hold'},
+    {k:'exhale', dur:p.exhale, lab:'ph.exR', col:'ex',   bar:'right', vo:'vo.exR'},
+    {k:'inhale', dur:p.inhale, lab:'ph.inR', col:'in',   bar:'right', vo:'vo.inR'},
+    {k:'hold',   dur:p.hold,   lab:'ph.hold',col:'hold', bar:'top', dir:'rtl', vo:'vo.hold'},
+    {k:'exhale', dur:p.exhale, lab:'ph.exL', col:'ex',   bar:'left',  vo:'vo.exL'},
   ];
 }
-/* 各フェーズでの3本のバーの状態 */
 const BARS=[
-  {top:['fut'],          left:['act'],          right:['fut']},
-  {top:['act'],          left:['done','teal'],  right:['fut']},
-  {top:['done','purple'],left:['done','teal'],  right:['act']},
-  {top:['fut'],          left:['fut'],          right:['act']},
-  {top:['act'],          left:['fut'],          right:['done','teal']},
-  {top:['done','purple'],left:['act'],          right:['done','teal']},
+  {top:['fut'],       left:['act'],       right:['fut']},
+  {top:['act'],       left:['done','in'], right:['fut']},
+  {top:['done','hold'],left:['done','in'],right:['act']},
+  {top:['fut'],       left:['fut'],       right:['act']},
+  {top:['act'],       left:['fut'],       right:['done','in']},
+  {top:['done','hold'],left:['act'],      right:['done','in']},
 ];
-const COLV={teal:'#45dfb1',purple:'#a78bfa',orange:'#f0a365'};
+const CVAR={in:'var(--c-in)',hold:'var(--c-hold)',ex:'var(--c-ex)'};
 
 /* =========================================================
    保存データ
    ========================================================= */
 const DEF_STATE={
+  onboarded:false,
+  lang:'ja', theme:'dark', fs:'m', bar:'m',
   presetId:'4-8-8',
   rounds:{'4-8-8':8,'6-12-12':5,'4-16-8':5,'custom':8},
   custom:{inhale:4,hold:8,exhale:8},
@@ -426,9 +596,33 @@ function load(){
     S.custom=Object.assign({},DEF_STATE.custom,S.custom||{});
     S.streak=Object.assign({},DEF_STATE.streak,S.streak||{});
     if(!Array.isArray(S.history)) S.history=[];
+    if(!T[S.lang]) S.lang='ja';
+    if(!FS[S.fs]) S.fs='m';
+    if(!BARW[S.bar]) S.bar='m';
+    if(S.theme!=='light') S.theme='dark';
   }catch(e){ S=clone(DEF_STATE); }
 }
 function save(){ try{ localStorage.setItem('nadi',JSON.stringify(S)); }catch(e){} }
+
+/* =========================================================
+   表示設定の適用
+   ========================================================= */
+function applyDisplay(){
+  const r=document.documentElement;
+  r.dataset.theme=S.theme;
+  r.lang=S.lang;
+  r.style.setProperty('--fs',FS[S.fs]);
+  r.style.setProperty('--bar',BARW[S.bar]);
+  const m=document.getElementById('metaTheme');
+  if(m) m.content = S.theme==='light' ? '#ffffff' : '#151a2b';
+  document.title=t('app.name');
+}
+function applyLang(){
+  document.querySelectorAll('[data-i]').forEach(n=>{ n.textContent=t(n.dataset.i); });
+  document.getElementById('aboutBody').innerHTML=t('about.body');
+  document.getElementById('noseL').textContent=t('nose.l');
+  document.getElementById('noseR').textContent=t('nose.r');
+}
 
 /* =========================================================
    ユーティリティ
@@ -443,17 +637,31 @@ function clamp(v,a,b){ v=Math.round(Number(v)||0); return v<a?a:(v>b?b:v); }
 function fmt(sec){
   sec=Math.round(sec);
   const m=Math.floor(sec/60), s=sec%60;
+  if(S.lang==='en'){
+    if(m===0) return s+' sec';
+    return s===0 ? m+' min' : m+' min '+s+' sec';
+  }
   if(m===0) return s+'秒';
   return s===0 ? m+'分' : m+'分'+s+'秒';
 }
-function ratioHTML(p){
-  const t=p.inhale+p.hold+p.exhale;
-  const w=v=>(v/t*100).toFixed(1)+'%';
-  return '<div class="r-in" style="width:'+w(p.inhale)+'">吸</div>'
-       + '<div class="r-ho" style="width:'+w(p.hold)+'">止</div>'
-       + '<div class="r-ex" style="width:'+w(p.exhale)+'">吐</div>';
+/* 「8ラウンド · 約5分20秒」/「8 rounds · about 5 min 20 sec」 */
+function metaLine(p,r){
+  return S.lang==='en'
+    ? r+' '+t('u.rounds')+' · '+t('u.about')+' '+fmt(roundSec(p)*r)
+    : r+t('u.rounds')+' · '+t('u.about')+fmt(roundSec(p)*r);
 }
-function label(id){ return id==='custom'?'カスタム':id; }
+function streakText(n){
+  return S.lang==='en' ? n+'-'+t('u.streak') : n+t('u.streak');
+}
+function ratioHTML(p){
+  const tot=p.inhale+p.hold+p.exhale;
+  const w=v=>(v/tot*100).toFixed(1)+'%';
+  const L=S.lang==='en'?['IN','HOLD','OUT']:['吸','止','吐'];
+  return '<div class="r-in" style="width:'+w(p.inhale)+'">'+L[0]+'</div>'
+       + '<div class="r-ho" style="width:'+w(p.hold)+'">'+L[1]+'</div>'
+       + '<div class="r-ex" style="width:'+w(p.exhale)+'">'+L[2]+'</div>';
+}
+function label(id){ return id==='custom'?t('u.custom'):id; }
 
 /* =========================================================
    画面遷移
@@ -466,25 +674,67 @@ function go(id){
   if(id==='home') renderHome();
   if(id==='presets') renderPresets();
   if(id==='custom') renderCustom();
+  if(id==='display') renderDisplay();
   if(id==='notif') renderToggles();
   if(id==='history') renderHistory();
+  if(id==='onboard') renderOnboard();
 }
 document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return; }
-  const t=e.target.closest('[data-tg]'); if(t){ toggle(t.dataset.tg); }
+  const x=e.target.closest('[data-tg]'); if(x){ toggle(x.dataset.tg); }
 });
+
+/* =========================================================
+   セグメント選択UI（言語・テーマ・文字サイズ・バー太さ 共通）
+   ========================================================= */
+function segs(box,opts,curVal,onPick){
+  box.innerHTML=opts.map(o=>
+    '<button class="chip'+(o.v===curVal?' on':'')+'" data-v="'+o.v+'">'+o.l+'</button>').join('');
+  box.onclick=e=>{ const b=e.target.closest('[data-v]'); if(b) onPick(b.dataset.v); };
+}
+const OPT={
+  lang:()=>[{v:'ja',l:'日本語'},{v:'en',l:'English'}],
+  theme:()=>[{v:'dark',l:t('th.dark')},{v:'light',l:t('th.light')}],
+  fs:()=>[{v:'s',l:t('fs.s')},{v:'m',l:t('fs.m')},{v:'l',l:t('fs.l')}],
+  bar:()=>[{v:'s',l:t('bar.s')},{v:'m',l:t('bar.m')},{v:'l',l:t('bar.l')}],
+};
+function pick(key,val,rerender){
+  S[key]=val; save(); applyDisplay();
+  if(key==='lang') applyLang();
+  rerender();
+}
+
+/* ---------- 表示設定画面 ---------- */
+function renderDisplay(){
+  segs(dpLang, OPT.lang(),  S.lang, v=>pick('lang',v,renderDisplay));
+  segs(dpTheme,OPT.theme(), S.theme,v=>pick('theme',v,renderDisplay));
+  segs(dpFs,   OPT.fs(),    S.fs,   v=>pick('fs',v,renderDisplay));
+  segs(dpBar,  OPT.bar(),   S.bar,  v=>pick('bar',v,renderDisplay));
+  /* バー太さのプレビュー（止める＝満タン、左＝吸う途中、右＝未使用） */
+  barPrev.innerHTML=
+    '<div class="tube h act"><div class="fill" style="position:absolute;inset:3px;border-radius:4px;background:var(--c-hold)"></div></div>'+
+    '<div class="tube v l act"><div class="fill" style="position:absolute;left:3px;right:3px;top:3px;height:55%;border-radius:4px;background:var(--c-in)"></div></div>'+
+    '<div class="tube v r fut"></div>';
+}
+
+/* ---------- 初回オンボーディング ---------- */
+function renderOnboard(){
+  segs(obLang, OPT.lang(),  S.lang, v=>pick('lang',v,renderOnboard));
+  segs(obTheme,OPT.theme(), S.theme,v=>pick('theme',v,renderOnboard));
+  segs(obFs,   OPT.fs(),    S.fs,   v=>pick('fs',v,renderOnboard));
+  segs(obBar,  OPT.bar(),   S.bar,  v=>pick('bar',v,renderOnboard));
+}
+document.getElementById('obDone').onclick=()=>{ S.onboarded=true; save(); go('home'); };
 
 /* =========================================================
    ホーム
    ========================================================= */
 function renderHome(){
   const p=presetById(S.presetId), r=roundsFor(S.presetId);
-  document.getElementById('hNm').textContent=label(p.id);
-  document.getElementById('hRatio').innerHTML=ratioHTML(p);
-  document.getElementById('hMeta').textContent=r+'ラウンド · 約'+fmt(roundSec(p)*r);
-  const st=document.getElementById('hStreak');
-  st.innerHTML=FLAME+(S.streak.count>0? S.streak.count+'日連続' : 'まだ記録がありません');
-  st.style.display=S.streak.count>0?'':'inline-flex';
+  hNm.textContent=label(p.id);
+  hRatio.innerHTML=ratioHTML(p);
+  hMeta.textContent=metaLine(p,r);
+  hStreak.innerHTML = S.streak.count>0 ? FLAME+streakText(S.streak.count) : t('home.nostreak');
 }
 
 /* =========================================================
@@ -500,11 +750,11 @@ function renderPresets(){
     el.innerHTML=
       '<div class="r1"><span class="rn"><span class="radio"></span><span class="pnm">'+p.id+'</span></span></div>'+
       '<div class="ratio ind">'+ratioHTML(p)+'</div>'+
-      '<div class="pmt ind">'+r+'ラウンド · 約'+fmt(roundSec(p)*r)+'</div>'+
-      (sel? '<div class="chip-lb ind">ラウンド数</div><div class="chips ind">'+
+      '<div class="pmt ind">'+metaLine(p,r)+'</div>'+
+      (sel? '<div class="chip-lb ind">'+t('preset.rounds')+'</div><div class="chips ind">'+
             CHIPS.map(c=>'<button class="chip'+(c===r?' on':'')+'" data-r="'+c+'">'+c+'</button>').join('')+
             '<button class="chip sm'+(CHIPS.includes(r)?'':' on')+'" data-other="1">'+
-              (CHIPS.includes(r)?'その他':r)+'</button></div>'
+              (CHIPS.includes(r)?t('preset.other'):r)+'</button></div>'
           :'');
     el.addEventListener('click',ev=>{
       const c=ev.target.closest('[data-r]');
@@ -514,21 +764,19 @@ function renderPresets(){
     });
     box.appendChild(el);
   });
-  // カスタム
   const c=document.createElement('div');
   const isC=S.presetId==='custom';
   c.className='pcard'+(isC?' sel':'');
   const cp=presetById('custom'), cr=roundsFor('custom');
-  c.innerHTML='<div class="r1"><span class="pnm">カスタム</span><span class="cv">›</span></div>'+
-    (isC? '<div class="ratio">'+ratioHTML(cp)+'</div><div class="pmt">'+cr+'ラウンド · 約'+fmt(roundSec(cp)*cr)+'</div>'
-        : '<div class="pmt">秒数・ラウンド数を自由に設定</div>');
+  c.innerHTML='<div class="r1"><span class="pnm">'+t('u.custom')+'</span><span class="cv">›</span></div>'+
+    (isC? '<div class="ratio">'+ratioHTML(cp)+'</div><div class="pmt">'+metaLine(cp,cr)+'</div>'
+        : '<div class="pmt">'+t('custom.desc')+'</div>');
   c.addEventListener('click',()=>go('custom'));
   box.appendChild(c);
 }
 
-/* ラウンド数「その他」入力 */
 function askRounds(pid){
-  sheet('ラウンド数','3〜20の範囲で指定できます',roundsFor(pid),MIN_R,MAX_R,v=>{
+  sheet(t('sheet.rounds'),t('sheet.roundsHint'),roundsFor(pid),MIN_R,MAX_R,v=>{
     S.rounds[pid]=v; save(); renderPresets();
   });
 }
@@ -537,8 +785,8 @@ function sheet(title,hint,val,min,max,ok){
   d.className='sheet';
   d.innerHTML='<div class="sheet-in"><h4>'+title+'</h4><div class="hint">'+hint+'</div>'+
     '<input class="num" type="number" inputmode="numeric" min="'+min+'" max="'+max+'" value="'+val+'">'+
-    '<button class="btn p" style="margin-top:16px">決定</button>'+
-    '<button class="btn s">キャンセル</button></div>';
+    '<button class="btn p" style="margin-top:16px">'+t('sheet.ok')+'</button>'+
+    '<button class="btn s">'+t('sheet.cancel')+'</button></div>';
   document.getElementById('app').appendChild(d);
   const inp=d.querySelector('.num'), bs=d.querySelectorAll('.btn');
   setTimeout(()=>{inp.focus();inp.select();},50);
@@ -559,7 +807,7 @@ function updCustom(){
   const p={inhale:clamp(cIn.value,1,30),hold:clamp(cHo.value,0,40),exhale:clamp(cEx.value,1,40)};
   const r=clamp(cRd.value,MIN_R,MAX_R);
   cRatio.innerHTML=ratioHTML(p);
-  cMeta.textContent=r+'ラウンド · 約'+fmt(roundSec(p)*r);
+  cMeta.textContent=metaLine(p,r);
 }
 ['cIn','cHo','cEx','cRd'].forEach(id=>document.getElementById(id).addEventListener('input',updCustom));
 document.getElementById('cSave').onclick=()=>{
@@ -569,12 +817,11 @@ document.getElementById('cSave').onclick=()=>{
 };
 
 /* =========================================================
-   設定トグル
+   通知トグル
    ========================================================= */
 function renderToggles(){
   document.querySelectorAll('[data-tg]').forEach(r=>{
-    const on=!!S.settings[r.dataset.tg];
-    r.querySelector('.sw').className='sw '+(on?'on':'off');
+    r.querySelector('.sw').className='sw '+(S.settings[r.dataset.tg]?'on':'off');
   });
 }
 function toggle(k){ S.settings[k]=!S.settings[k]; save(); renderToggles(); if(k==='sound'&&S.settings[k]) ping(660,.3,.06); }
@@ -584,10 +831,12 @@ function toggle(k){ S.settings[k]=!S.settings[k]; save(); renderToggles(); if(k=
    ========================================================= */
 function renderHistory(){
   const box=document.getElementById('hList');
-  if(!S.history.length){ box.innerHTML='<div class="empty">まだ実施記録がありません</div>'; return; }
-  box.innerHTML=S.history.slice().reverse().slice(0,50).map(h=>
-    '<div class="hitem"><b>'+h.preset+'</b> ・ '+h.rounds+'ラウンド ・ '+fmt(h.sec)+
-    '<div class="d">'+h.date.replace(/-/g,'/')+' '+h.time+'</div></div>').join('');
+  if(!S.history.length){ box.innerHTML='<div class="empty">'+t('hist.empty')+'</div>'; return; }
+  box.innerHTML=S.history.slice().reverse().slice(0,50).map(h=>{
+    const r = S.lang==='en' ? h.rounds+' '+t('hist.rounds') : h.rounds+t('hist.rounds');
+    return '<div class="hitem"><b>'+h.preset+'</b> · '+r+' · '+fmt(h.sec)+
+      '<div class="d">'+h.date.replace(/-/g,'/')+' '+h.time+'</div></div>';
+  }).join('');
 }
 document.getElementById('hClear').onclick=()=>{
   S.history=[]; S.streak={count:0,last:null}; save(); renderHistory();
@@ -610,14 +859,15 @@ function ping(freq,dur,gain){
   o.start(); o.stop(a.currentTime+dur+.02);
 }
 function vibe(ms){ if(S.settings.vibe&&navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
-function speak(t){
+function speak(txt){
   if(!S.settings.voice||!window.speechSynthesis) return;
   try{ speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=1; speechSynthesis.speak(u);
+    const u=new SpeechSynthesisUtterance(txt);
+    u.lang = S.lang==='en' ? 'en-US' : 'ja-JP'; u.rate=1;
+    speechSynthesis.speak(u);
   }catch(e){}
 }
 
-/* 画面ロック抑止 */
 let wl=null;
 async function wakeOn(){
   if(!S.settings.wake||!navigator.wakeLock) return;
@@ -629,9 +879,9 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* =========================================================
-   セッション本体
+   セッション
    ========================================================= */
-const run={active:false,paused:false,p:null,ph:null,rounds:0,idx:0,round:0,t0:0,acc:0,tick:-1,raf:0,elapsed:0};
+const run={active:false,paused:false,p:null,ph:null,rounds:0,idx:0,round:0,t0:0,acc:0,tick:-1,raf:0};
 const el={
   head:document.getElementById('sHead'), lab:document.getElementById('sLabel'),
   num:document.getElementById('sNum'), dur:document.getElementById('sDur'),
@@ -642,7 +892,7 @@ const el={
 function startSession(){
   const p=presetById(S.presetId);
   run.p=p; run.ph=phasesOf(p); run.rounds=roundsFor(S.presetId);
-  run.active=true; run.paused=false; run.idx=0; run.round=0; run.acc=0; run.tick=-1; run.elapsed=0;
+  run.active=true; run.paused=false; run.idx=0; run.round=0; run.acc=0; run.tick=-1;
   audio(); wakeOn();
   buildDots();
   go('session');
@@ -652,26 +902,25 @@ function startSession(){
 }
 function enterPhase(first){
   const ph=run.ph[run.idx];
-  el.lab.textContent=ph.lab;
-  el.lab.style.color=COLV[ph.col];
+  el.lab.textContent=t(ph.lab);
+  el.lab.style.color=CVAR[ph.col];
   el.dur.textContent='/ '+ph.dur+'s';
-  el.head.textContent='ナディーショーダナ ・ ラウンド '+(run.round+1)+' / '+run.rounds;
+  el.head.textContent=t('sess.round')+' '+(run.round+1)+' / '+run.rounds;
   run.tick=-1;
   updDots();
   layout(0);
   if(S.settings.sound) ping(ph.k==='exhale'?523:(ph.k==='hold'?784:660),.34,.07);
   vibe(first?40:30);
-  speak(ph.voice);
+  speak(t(ph.vo));
 }
 
-/* バー描画 */
-function layout(t){
+function layout(tt){
   const ph=run.ph[run.idx], st=BARS[run.idx];
-  paint(el.top,  st.top,  'h', ph, t);
-  paint(el.left, st.left, 'v', ph, t);
-  paint(el.right,st.right,'v', ph, t);
+  paint(el.top,  st.top,  'h', ph, tt);
+  paint(el.left, st.left, 'v', ph, tt);
+  paint(el.right,st.right,'v', ph, tt);
 }
-function paint(node,state,axis,ph,t){
+function paint(node,state,axis,ph,tt){
   node.className='tube '+(axis==='h'?'h':'v '+(node===el.left?'l':'r'))+
                  (state[0]==='fut'?' fut':(state[0]==='act'?' act':''));
   const fill=node.querySelector('.fill');
@@ -679,56 +928,47 @@ function paint(node,state,axis,ph,t){
   if(state[0]==='fut'){ fill.style.cssText='display:none'; clearTicks(node); return; }
 
   if(state[0]==='done'){
-    fill.style.cssText='position:absolute;inset:3px;border-radius:4px;z-index:1;opacity:.2;background:'+COLV[state[1]];
+    fill.style.cssText='position:absolute;inset:3px;border-radius:4px;z-index:1;opacity:.2;background:'+CVAR[state[1]];
     clearTicks(node);
     return;
   }
 
-  /* --- active --- */
-  const col=COLV[ph.col];
-  let pct = (ph.k==='exhale') ? t*100 : (1-t)*100;
+  const col=CVAR[ph.col];
+  let pct = (ph.k==='exhale') ? tt*100 : (1-tt)*100;
   pct=Math.max(0,Math.min(100,pct));
 
   if(axis==='v'){
-    /* 縦は常に上端固定で高さが増減 */
     fill.style.cssText='position:absolute;left:3px;right:3px;top:3px;border-radius:4px;z-index:1;overflow:hidden;background:'+col+
                        ';height:calc((100% - 6px) * '+(pct/100)+')';
   }else{
-    /* 止める：息が入った側から減る → ltr は右寄せ、rtl は左寄せ */
     fill.style.cssText='position:absolute;top:3px;bottom:3px;'+(ph.dir==='ltr'?'right':'left')+
                        ':3px;border-radius:4px;z-index:1;overflow:hidden;background:'+col+
                        ';width:calc((100% - 6px) * '+(pct/100)+')';
   }
 
-  /* 目盛りはフェーズが変わった時だけ作り直す（毎フレーム再生成しない） */
-  const key=ph.k+'|'+ph.dur+'|'+(ph.dir||'')+'|'+axis;
+  /* バー太さを変えると実寸が変わるので key に寸法も含める */
+  const key=ph.k+'|'+ph.dur+'|'+(ph.dir||'')+'|'+axis+'|'+node.clientWidth+'x'+node.clientHeight;
   if(node.dataset.tkKey!==key){
     if(buildTicks(node,fill,axis,ph)) node.dataset.tkKey=key;
   }
 }
-
 function clearTicks(node){
   node.querySelectorAll('.tk').forEach(n=>n.remove());
   delete node.dataset.tkKey;
 }
-
-/* 目盛りは2層に分けて描く。
-   ・下層（tk-bg / 明るい線）＝チューブ直下に全長で置く → 空の部分でも分割数が見える
-   ・上層（tk-fg / 暗い線）  ＝塗り(.fill)の「内側」に置く → overflow で塗りの範囲だけに切られ、
-                               色が乗った部分でのみ隙間として見える
-   両方をチューブ直下に全長で置くと、上層が下層を完全に覆って下層が見えなくなる。 */
+/* 目盛りは2層。下層(明るい線)はチューブ直下に全長で置き空の部分でも見える。
+   上層(トラック色の線)は .fill の内側に置き、overflow で塗りの範囲だけに切られる。
+   両方を全長で置くと上層が下層を覆い隠して何も見えなくなる。 */
 function buildTicks(node,fill,axis,ph){
   clearTicks(node);
   const n=ph.dur;
   const innerW=node.clientWidth-6, innerH=node.clientHeight-6;
   const span = axis==='v' ? innerH : innerW;
-  if(span<=0) return false;                        // 非表示などで測れない時は次フレームに再試行
-  // 1マスが細かくなりすぎる時だけ目盛りなしの連続バーに切り替える（確定した状態として扱う）
+  if(span<=0) return false;
   if(n<2 || span/n < MIN_TICK_PX) return true;
 
   for(let i=1;i<n;i++){
     const d=span*i/n;
-
     const b=document.createElement('div');
     b.className='tk tk-bg';
     b.style.cssText = axis==='v'
@@ -738,9 +978,9 @@ function buildTicks(node,fill,axis,ph){
 
     const f=document.createElement('div');
     f.className='tk tk-fg';
-    if(axis==='v')              f.style.cssText='left:0;right:0;top:'+(d-1)+'px;height:2px;';
-    else if(ph.dir==='ltr')     f.style.cssText='top:0;bottom:0;right:'+(innerW-d-1)+'px;width:2px;';
-    else                        f.style.cssText='top:0;bottom:0;left:'+(d-1)+'px;width:2px;';
+    if(axis==='v')          f.style.cssText='left:0;right:0;top:'+(d-1)+'px;height:2px;';
+    else if(ph.dir==='ltr') f.style.cssText='top:0;bottom:0;right:'+(innerW-d-1)+'px;width:2px;';
+    else                    f.style.cssText='top:0;bottom:0;left:'+(d-1)+'px;width:2px;';
     fill.appendChild(f);
   }
   return true;
@@ -749,8 +989,9 @@ function buildTicks(node,fill,axis,ph){
 function buildDots(){
   const n=run.rounds;
   const w=Math.max(6,Math.min(19,Math.floor((208-(n-1)*5)/n)));
-  el.dots.innerHTML=Array.from({length:n},(_,i)=>
-    '<span class="dot" data-i="'+i+'" style="width:'+w+'px"></span>').join('');
+  /* data-i は i18n 用セレクタなのでドットには付けない（翻訳処理に拾われて文字が入る） */
+  el.dots.innerHTML=Array.from({length:n},()=>
+    '<span class="dot" style="width:'+w+'px"></span>').join('');
 }
 function updDots(){
   [...el.dots.children].forEach((d,i)=>{
@@ -761,21 +1002,17 @@ function updDots(){
 function loop(){
   if(!run.active||run.paused) return;
   const ph=run.ph[run.idx];
-  const now=performance.now();
-  const e=(run.acc+(now-run.t0))/1000;
-  const t=Math.min(1,e/ph.dur);
+  const e=(run.acc+(performance.now()-run.t0))/1000;
+  const tt=Math.min(1,e/ph.dur);
 
-  layout(t);
-  const shown=Math.min(ph.dur,Math.floor(e)+1);
-  el.num.textContent=shown;
+  layout(tt);
+  el.num.textContent=Math.min(ph.dur,Math.floor(e)+1);
 
-  /* 秒ごとのティック */
   const sec=Math.floor(e);
   if(S.settings.tick&&sec!==run.tick&&sec>0&&sec<ph.dur){ ping(1180,.045,.028); vibe(8); }
   if(sec!==run.tick) run.tick=sec;
 
   if(e>=ph.dur){
-    run.elapsed+=ph.dur;
     run.idx++;
     if(run.idx>=run.ph.length){
       run.idx=0; run.round++;
@@ -795,13 +1032,13 @@ function pause(){
   wakeOff();
   const d=document.createElement('div');
   d.className='ovl'; d.id='pauseOvl';
-  d.innerHTML='<h3>一時停止中</h3><p>ラウンド '+(run.round+1)+' / '+run.rounds+' の途中から再開します</p>'+
-    '<div style="width:100%;margin-top:22px"><button class="btn p">再開する</button>'+
-    '<button class="btn s">セッションを終了</button></div>';
+  d.innerHTML='<h3>'+t('sess.paused')+'</h3><p>'+t('sess.round')+' '+(run.round+1)+' / '+run.rounds+'</p>'+
+    '<div style="width:100%;margin-top:22px"><button class="btn p">'+t('sess.resume')+'</button>'+
+    '<button class="btn s">'+t('sess.end')+'</button></div>';
   document.getElementById('session').appendChild(d);
   const b=d.querySelectorAll('.btn');
-  b[0].onclick=e=>{ e.stopPropagation(); d.remove(); run.paused=false; run.t0=performance.now(); wakeOn(); loop(); };
-  b[1].onclick=e=>{ e.stopPropagation(); d.remove(); stopSession(); go('home'); };
+  b[0].onclick=ev=>{ ev.stopPropagation(); d.remove(); run.paused=false; run.t0=performance.now(); wakeOn(); loop(); };
+  b[1].onclick=ev=>{ ev.stopPropagation(); d.remove(); stopSession(); go('home'); };
 }
 document.getElementById('session').addEventListener('click',e=>{
   if(e.target.closest('.ovl')) return;
@@ -817,25 +1054,24 @@ function stopSession(){
 }
 
 function finish(){
-  const p=run.p, total=roundSec(p)*run.rounds;
+  const p=run.p, total=roundSec(p)*run.rounds, rounds=run.rounds;
   stopSession();
   if(S.settings.sound){ ping(880,.5,.08); setTimeout(()=>ping(1174,.6,.07),180); }
   vibe([40,60,40]);
-  /* ストリーク更新 */
-  const today=new Date(); const ds=ymd(today);
+  const today=new Date(), ds=ymd(today);
   if(S.streak.last!==ds){
     const y=new Date(today); y.setDate(y.getDate()-1);
     S.streak.count=(S.streak.last===ymd(y))?S.streak.count+1:1;
     S.streak.last=ds;
   }
-  S.history.push({preset:label(p.id),rounds:run.rounds,sec:total,date:ds,
+  S.history.push({preset:label(p.id),rounds:rounds,sec:total,date:ds,
     time:String(today.getHours()).padStart(2,'0')+':'+String(today.getMinutes()).padStart(2,'0')});
   if(S.history.length>200) S.history=S.history.slice(-200);
   save();
-  document.getElementById('dRounds').textContent=run.rounds+' / '+run.rounds;
-  document.getElementById('dTime').textContent=fmt(total);
-  document.getElementById('dPreset').textContent=label(p.id);
-  document.getElementById('dStreak').innerHTML=FLAME+S.streak.count+'日連続';
+  dRounds.textContent=rounds+' / '+rounds;
+  dTime.textContent=fmt(total);
+  dPreset.textContent=label(p.id);
+  dStreak.innerHTML=FLAME+streakText(S.streak.count);
   go('done');
 }
 function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -847,7 +1083,14 @@ document.getElementById('dAgain').onclick=startSession;
    起動
    ========================================================= */
 load();
-renderHome();
+/* 初回のみ端末の言語を初期値として推定する */
+if(!S.onboarded && !localStorage.getItem('nadi')){
+  S.lang = (navigator.language||'ja').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+}
+applyDisplay();
+applyLang();
+go(S.onboarded ? 'home' : 'onboard');
+
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
