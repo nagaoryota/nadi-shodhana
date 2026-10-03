@@ -1,0 +1,26 @@
+{
+  "name": "ナディーショーダナ",
+  "short_name": "ナディー",
+  "description": "片鼻呼吸法（ナディーショーダナ）のガイドアプリ",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#151a2b",
+  "theme_color": "#151a2b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#151a2b"/>
+  <!-- 上辺＝止める（バイオレット） -->
+  <rect x="112" y="128" width="288" height="56" rx="12" fill="#a78bfa"/>
+  <!-- 左の縦バー＝吸う（ティール） -->
+  <rect x="112" y="208" width="56" height="176" rx="12" fill="#45dfb1"/>
+  <!-- 右の縦バー＝吐く（オレンジ） -->
+  <rect x="344" y="208" width="56" height="176" rx="12" fill="#f0a365"/>
+</svg>

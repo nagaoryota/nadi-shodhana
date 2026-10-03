@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- maskable: 安全領域（中央80%）に収まるよう図形を小さめに配置 -->
+  <rect width="512" height="512" fill="#151a2b"/>
+  <rect x="152" y="168" width="208" height="42" rx="10" fill="#a78bfa"/>
+  <rect x="152" y="230" width="42" height="126" rx="10" fill="#45dfb1"/>
+  <rect x="318" y="230" width="42" height="126" rx="10" fill="#f0a365"/>
+</svg>
