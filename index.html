@@ -2,6 +2,25 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<!-- 外部リソースを一切読み込まない前提のポリシー。万一スクリプトが混入しても
+     外部への送信・外部からの読み込みを遮断する。CSS/JSは全て同一ファイル内の
+     インラインのため 'unsafe-inline' が必要。
+     frame-ancestors は meta では無効（HTTPヘッダ専用）だが、
+     GitHub Pages ではヘッダを付けられないため省略している。 -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;
+  font-src 'self';
+  connect-src 'self';
+  manifest-src 'self';
+  worker-src 'self';
+  media-src 'none';
+  object-src 'none';
+  base-uri 'none';
+  form-action 'none';
+">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#151a2b" id="metaTheme">
 <title>ナディーショーダナ</title>
@@ -286,22 +305,54 @@ body{
 /* ---------- onboarding ---------- */
 .ob-ttl{font-size:calc(20px * var(--fs));font-weight:700;text-align:center;margin-top:20px;flex:none;}
 .ob-sub{font-size:calc(11.5px * var(--fs));color:var(--dim);text-align:center;margin-top:7px;flex:none;}
+.ob-steps{display:flex;gap:7px;justify-content:center;margin-top:16px;flex:none;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--dot);}
+.sdot.on{background:var(--action);}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ===== ONBOARDING ===== -->
+  <!-- ===== ONBOARDING（1:表示 / 2:通知） ===== -->
   <section class="screen" id="onboard">
-    <div class="ob-ttl" data-i="ob.title"></div>
-    <div class="ob-sub" data-i="ob.sub"></div>
-    <div class="list" style="margin-top:22px">
+    <div class="ob-ttl" id="obTtl"></div>
+    <div class="ob-sub" id="obSub"></div>
+    <div class="ob-steps"><span class="sdot" id="sd1"></span><span class="sdot" id="sd2"></span></div>
+
+    <div class="list" id="obStep1">
       <div class="grp"><div class="grp-lb" data-i="disp.lang"></div><div class="chips" id="obLang"></div></div>
       <div class="grp"><div class="grp-lb" data-i="disp.theme"></div><div class="chips" id="obTheme"></div></div>
       <div class="grp"><div class="grp-lb" data-i="disp.fs"></div><div class="chips" id="obFs"></div></div>
       <div class="grp"><div class="grp-lb" data-i="disp.bar"></div><div class="chips" id="obBar"></div></div>
     </div>
-    <div class="btns"><button class="btn p" id="obDone" data-i="ob.start"></button></div>
+
+    <div class="list" id="obStep2" style="display:none">
+      <div class="row" data-tg="sound">
+        <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+      <div class="row sub" data-tg="tick">
+        <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+      <div class="row" data-tg="vibe">
+        <div><div class="rnm" data-i="nt.vibe"></div><div class="rds" data-i="nt.vibeD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+      <div class="row" data-tg="voice">
+        <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+      <div class="row" data-tg="wake">
+        <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="btn p" id="obNext"></button>
+      <button class="btn s" id="obBack" data-i="ob.back"></button>
+    </div>
   </section>
 
   <!-- ===== HOME ===== -->
@@ -496,7 +547,9 @@ ja:{
  'nose.l':'左','nose.r':'右',
  'done.title':'セッション完了！','done.rounds':'実施ラウンド','done.time':'所要時間','done.preset':'プリセット',
  'done.home':'ホームに戻る','done.again':'もう一度行う',
- 'ob.title':'ようこそ','ob.sub':'表示のしかたを選んでください。あとから設定でいつでも変更できます。','ob.start':'はじめる',
+ 'ob.title':'ようこそ','ob.sub':'表示のしかたを選んでください。あとから設定でいつでも変更できます。',
+ 'ob.title2':'お知らせのしかた','ob.sub2':'フェーズの切り替わりをどう伝えるか選んでください。画面を見ずに呼吸したい場合は音か振動をおすすめします。',
+ 'ob.next':'次へ','ob.back':'戻る','ob.start':'はじめる',
  'u.rounds':'ラウンド','u.about':'約','u.streak':'日連続','u.min':'分','u.sec':'秒','u.custom':'カスタム',
  'sheet.rounds':'ラウンド数','sheet.roundsHint':'3〜20の範囲で指定できます','sheet.ok':'決定','sheet.cancel':'キャンセル',
  'about.body':'ナディーショーダナ（片鼻呼吸法）のためのガイドアプリです。<br><br>1ラウンドは「左から吸う → 止める → 右から吐く → 右から吸う → 止める → 左から吐く」の6フェーズで構成されます。<br><br>縦のバーは上端を固定して高さが増減します。減る＝吸う、増える＝吐く。上のバーは止めている間、息が入ってきた側から減っていきます。<br><br>記録は端末内にのみ保存されます。'
@@ -527,7 +580,9 @@ en:{
  'nose.l':'L','nose.r':'R',
  'done.title':'Session complete','done.rounds':'Rounds','done.time':'Duration','done.preset':'Preset',
  'done.home':'Back to home','done.again':'Do it again',
- 'ob.title':'Welcome','ob.sub':'Choose how things should look. You can change this anytime in Settings.','ob.start':'Get started',
+ 'ob.title':'Welcome','ob.sub':'Choose how things should look. You can change this anytime in Settings.',
+ 'ob.title2':'How to be notified','ob.sub2':'Choose how each phase change is signalled. Sound or vibration lets you breathe without watching the screen.',
+ 'ob.next':'Next','ob.back':'Back','ob.start':'Get started',
  'u.rounds':'rounds','u.about':'about','u.streak':'day streak','u.min':'min','u.sec':'sec','u.custom':'Custom',
  'sheet.rounds':'Rounds','sheet.roundsHint':'Choose a number between 3 and 20','sheet.ok':'OK','sheet.cancel':'Cancel',
  'about.body':'A guide app for Nadi Shodhana (alternate nostril breathing).<br><br>One round has six phases: inhale left → hold → exhale right → inhale right → hold → exhale left.<br><br>The vertical bars are anchored at the top and change in height: shrinking means inhaling, growing means exhaling. While you hold, the top bar empties from the side the breath came in.<br><br>All records stay on your device.'
@@ -587,20 +642,69 @@ const DEF_STATE={
 };
 let S;
 const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* innerHTML に文字列を載せる場合は必ずこれを通す。
+   現状 preset 名は固定文字列だが、保存データは書き換え可能なため
+   「描画側で必ずエスケープする」方を不変条件にしておく。 */
+function esc(v){
+  return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* 保存データは信頼しない。既知のキーだけを型と範囲を検証して取り込み、
+   想定外のキーは一切引き継がない（丸ごと Object.assign しない）。
+   壊れた値や改変された値があっても既定値に落ちるだけで動作が壊れないようにする。 */
 function load(){
-  try{
-    const raw=localStorage.getItem('nadi');
-    S=raw?Object.assign(clone(DEF_STATE),JSON.parse(raw)):clone(DEF_STATE);
-    S.settings=Object.assign({},DEF_STATE.settings,S.settings||{});
-    S.rounds=Object.assign({},DEF_STATE.rounds,S.rounds||{});
-    S.custom=Object.assign({},DEF_STATE.custom,S.custom||{});
-    S.streak=Object.assign({},DEF_STATE.streak,S.streak||{});
-    if(!Array.isArray(S.history)) S.history=[];
-    if(!T[S.lang]) S.lang='ja';
-    if(!FS[S.fs]) S.fs='m';
-    if(!BARW[S.bar]) S.bar='m';
-    if(S.theme!=='light') S.theme='dark';
-  }catch(e){ S=clone(DEF_STATE); }
+  S=clone(DEF_STATE);
+  let raw=null;
+  try{ raw=localStorage.getItem('nadi'); }catch(e){ return; }
+  if(!raw) return;
+
+  let o;
+  try{ o=JSON.parse(raw); }catch(e){ return; }
+  if(!o || typeof o!=='object' || Array.isArray(o)) return;
+
+  const num=(v,a,b,d)=>{ v=Number(v); return Number.isFinite(v) ? Math.min(b,Math.max(a,Math.round(v))) : d; };
+  const pick1=(v,allowed,d)=>allowed.includes(v)?v:d;
+
+  S.onboarded = o.onboarded===true;
+  S.lang  = pick1(o.lang, Object.keys(T), DEF_STATE.lang);
+  S.theme = pick1(o.theme,['dark','light'], DEF_STATE.theme);
+  S.fs    = pick1(o.fs,   Object.keys(FS), DEF_STATE.fs);
+  S.bar   = pick1(o.bar,  Object.keys(BARW), DEF_STATE.bar);
+
+  const ids=[...PRESETS.map(p=>p.id),'custom'];
+  S.presetId = pick1(o.presetId, ids, DEF_STATE.presetId);
+
+  if(o.rounds && typeof o.rounds==='object'){
+    ids.forEach(id=>{ if(id in o.rounds) S.rounds[id]=num(o.rounds[id],MIN_R,MAX_R,DEF_STATE.rounds[id]); });
+  }
+  if(o.custom && typeof o.custom==='object'){
+    S.custom={
+      inhale:num(o.custom.inhale,1,30,DEF_STATE.custom.inhale),
+      hold:  num(o.custom.hold,  0,40,DEF_STATE.custom.hold),
+      exhale:num(o.custom.exhale,1,40,DEF_STATE.custom.exhale),
+    };
+  }
+  if(o.settings && typeof o.settings==='object'){
+    Object.keys(DEF_STATE.settings).forEach(k=>{
+      if(k in o.settings) S.settings[k]=o.settings[k]===true;
+    });
+  }
+  if(o.streak && typeof o.streak==='object'){
+    S.streak={
+      count:num(o.streak.count,0,100000,0),
+      last:(typeof o.streak.last==='string' && /^\d{4}-\d{2}-\d{2}$/.test(o.streak.last)) ? o.streak.last : null,
+    };
+  }
+  if(Array.isArray(o.history)){
+    S.history=o.history.slice(-200).filter(h=>h&&typeof h==='object').map(h=>({
+      preset:String(h.preset==null?'':h.preset).slice(0,40),
+      rounds:num(h.rounds,0,100000,0),
+      sec:   num(h.sec,0,100000000,0),
+      date:  (typeof h.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(h.date))?h.date:'',
+      time:  (typeof h.time==='string'&&/^\d{2}:\d{2}$/.test(h.time))?h.time:'',
+    }));
+  }
 }
 function save(){ try{ localStorage.setItem('nadi',JSON.stringify(S)); }catch(e){} }
 
@@ -717,14 +821,32 @@ function renderDisplay(){
     '<div class="tube v r fut"></div>';
 }
 
-/* ---------- 初回オンボーディング ---------- */
+/* ---------- 初回オンボーディング（1:表示 → 2:通知） ---------- */
+let obStep=1;
 function renderOnboard(){
-  segs(obLang, OPT.lang(),  S.lang, v=>pick('lang',v,renderOnboard));
-  segs(obTheme,OPT.theme(), S.theme,v=>pick('theme',v,renderOnboard));
-  segs(obFs,   OPT.fs(),    S.fs,   v=>pick('fs',v,renderOnboard));
-  segs(obBar,  OPT.bar(),   S.bar,  v=>pick('bar',v,renderOnboard));
+  obTtl.textContent = obStep===1 ? t('ob.title')  : t('ob.title2');
+  obSub.textContent = obStep===1 ? t('ob.sub')    : t('ob.sub2');
+  obNext.textContent= obStep===1 ? t('ob.next')   : t('ob.start');
+  obStep1.style.display = obStep===1 ? '' : 'none';
+  obStep2.style.display = obStep===2 ? '' : 'none';
+  obBack.style.display  = obStep===2 ? '' : 'none';
+  sd1.className='sdot'+(obStep===1?' on':'');
+  sd2.className='sdot'+(obStep===2?' on':'');
+
+  if(obStep===1){
+    segs(obLang, OPT.lang(),  S.lang, v=>pick('lang',v,renderOnboard));
+    segs(obTheme,OPT.theme(), S.theme,v=>pick('theme',v,renderOnboard));
+    segs(obFs,   OPT.fs(),    S.fs,   v=>pick('fs',v,renderOnboard));
+    segs(obBar,  OPT.bar(),   S.bar,  v=>pick('bar',v,renderOnboard));
+  }else{
+    renderToggles();
+  }
 }
-document.getElementById('obDone').onclick=()=>{ S.onboarded=true; save(); go('home'); };
+obNext.onclick=()=>{
+  if(obStep===1){ obStep=2; renderOnboard(); return; }
+  S.onboarded=true; save(); go('home');
+};
+obBack.onclick=()=>{ obStep=1; renderOnboard(); };
 
 /* =========================================================
    ホーム
@@ -834,8 +956,8 @@ function renderHistory(){
   if(!S.history.length){ box.innerHTML='<div class="empty">'+t('hist.empty')+'</div>'; return; }
   box.innerHTML=S.history.slice().reverse().slice(0,50).map(h=>{
     const r = S.lang==='en' ? h.rounds+' '+t('hist.rounds') : h.rounds+t('hist.rounds');
-    return '<div class="hitem"><b>'+h.preset+'</b> · '+r+' · '+fmt(h.sec)+
-      '<div class="d">'+h.date.replace(/-/g,'/')+' '+h.time+'</div></div>';
+    return '<div class="hitem"><b>'+esc(h.preset)+'</b> · '+esc(r)+' · '+esc(fmt(h.sec))+
+      '<div class="d">'+esc(h.date.replace(/-/g,'/'))+' '+esc(h.time)+'</div></div>';
   }).join('');
 }
 document.getElementById('hClear').onclick=()=>{
@@ -916,7 +1038,10 @@ function enterPhase(first){
 
 function layout(tt){
   const ph=run.ph[run.idx], st=BARS[run.idx];
-  paint(el.top,  st.top,  'h', ph, tt);
+  /* 止める=0秒のときは止めるフェーズ自体が存在しないので、
+     上辺バーに「完了」の色を残さず常に未使用として描く */
+  const top = (run.p.hold>0) ? st.top : ['fut'];
+  paint(el.top,  top,     'h', ph, tt);
   paint(el.left, st.left, 'v', ph, tt);
   paint(el.right,st.right,'v', ph, tt);
 }
@@ -986,6 +1111,20 @@ function buildTicks(node,fill,axis,ph){
   return true;
 }
 
+/* 次のフェーズへ進む。0秒のフェーズ（カスタムで止める=0にした場合）は飛ばす。
+   全セッション終了なら false を返す。guard は全フェーズが0秒という異常時の保険。 */
+function nextPhase(){
+  let guard=0;
+  do{
+    run.idx++;
+    if(run.idx>=run.ph.length){
+      run.idx=0; run.round++;
+      if(run.round>=run.rounds) return false;
+    }
+  }while(run.ph[run.idx].dur<=0 && ++guard<run.ph.length);
+  return run.ph[run.idx].dur>0;
+}
+
 function buildDots(){
   const n=run.rounds;
   const w=Math.max(6,Math.min(19,Math.floor((208-(n-1)*5)/n)));
@@ -1003,7 +1142,9 @@ function loop(){
   if(!run.active||run.paused) return;
   const ph=run.ph[run.idx];
   const e=(run.acc+(performance.now()-run.t0))/1000;
-  const tt=Math.min(1,e/ph.dur);
+  /* dur=0 だと e/dur が NaN になり毎フレーム次へ進んでセッションが一瞬で終わる。
+     0秒フェーズは nextPhase() 側で読み飛ばすが、計算自体も安全側に倒す。 */
+  const tt=ph.dur>0 ? Math.min(1,e/ph.dur) : 1;
 
   layout(tt);
   el.num.textContent=Math.min(ph.dur,Math.floor(e)+1);
@@ -1013,11 +1154,7 @@ function loop(){
   if(sec!==run.tick) run.tick=sec;
 
   if(e>=ph.dur){
-    run.idx++;
-    if(run.idx>=run.ph.length){
-      run.idx=0; run.round++;
-      if(run.round>=run.rounds){ finish(); return; }
-    }
+    if(!nextPhase()){ finish(); return; }
     run.acc=0; run.t0=performance.now();
     enterPhase(false);
   }
