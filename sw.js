@@ -1,6 +1,6 @@
 /* ナディーショーダナ — Service Worker
    プロトタイプ用の最小構成。更新時は CACHE のバージョンを上げる。 */
-const CACHE = 'nadi-v15';
+const CACHE = 'nadi-v16';
 const ASSETS = [
   './',
   './index.html',
@@ -11,8 +11,15 @@ const ASSETS = [
 
 // Voice guide clips. Added individually with a catch, so a missing file
 // never breaks the install step.
-for (const kind of ['warm', 'space', 'male']) {
-  for (const lang of ['ja', 'en']) {
+// ryo は録音した肉声で日本語のみ。種類ごとに対応言語が違う。
+const VOICE_SETS = [
+  { kind: 'warm',  langs: ['ja', 'en'] },
+  { kind: 'space', langs: ['ja', 'en'] },
+  { kind: 'male',  langs: ['ja', 'en'] },
+  { kind: 'ryo',   langs: ['ja'] },
+];
+for (const { kind, langs } of VOICE_SETS) {
+  for (const lang of langs) {
     for (const n of ['inhale-left','inhale-right','hold','exhale-left','exhale-right',
                      'prep-inhale','prep-exhale']) {
       ASSETS.push('./audio/' + kind + '/' + lang + '/' + n + '.mp3');

@@ -681,10 +681,11 @@ ja:{
  'nt.wake':'画面を消さない','nt.wakeD':'セッション中は自動ロックを抑止',
  'nt.breath':'呼吸音','nt.breathD':'吸う・吐くに合わせて息の音が動く',
  'nt.voiceKind':'声の種類',
- 'vk.warm':'やわらか','vk.space':'ひろがり','vk.male':'男性',
+ 'vk.warm':'やわらか','vk.space':'ひろがり','vk.male':'男性','vk.ryo':'Ryoさん',
  'vk.warmD':'高域を抑えた、落ち着いた女性の声',
  'vk.spaceD':'やわらかに薄い残響を加え、奥行きを出した声',
  'vk.maleD':'低めの、落ち着いた男性の声',
+ 'vk.ryoD':'録音した肉声。日本語のみで、英語では端末の読み上げになります',
  'nt.bgm':'BGM','nt.bgmD':'セッション中に環境音を再生',
  'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
  'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
@@ -732,10 +733,11 @@ en:{
  'nt.wake':'Keep screen on','nt.wakeD':'Prevents auto-lock during a session',
  'nt.breath':'Breath sound','nt.breathD':'A soft breath sound that follows each inhale and exhale',
  'nt.voiceKind':'Voice',
- 'vk.warm':'Soft','vk.space':'Spacious','vk.male':'Male',
+ 'vk.warm':'Soft','vk.space':'Spacious','vk.male':'Male','vk.ryo':'Ryo',
  'vk.warmD':'A calm female voice with the highs eased back',
  'vk.spaceD':'The soft voice with a touch of reverb for depth',
  'vk.maleD':'A low, calm male voice',
+ 'vk.ryoD':'A real recorded voice. Japanese only — English falls back to the device reader',
  'nt.bgm':'Background sound','nt.bgmD':'Play ambient sound during a session',
  'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
  'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
@@ -764,7 +766,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「最新版を確認」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.9.0';
+const APP_VERSION='1.10.0';
 
 /* =========================================================
    定数
@@ -1577,8 +1579,10 @@ function vibe(ms){ if(S.settings.vibe&&navigator.vibrate) try{navigator.vibrate(
    録音ファイルがあればそれを再生し、無ければ端末の読み上げに落とす。
    ファイルは audio/<lang>/<name>.mp3 に置く（README 参照）。
    一度 404 を踏んだ組み合わせは覚えておき、毎回取りに行かない。 */
-/* 声の種類。audio/<種類>/<言語>/<名前>.mp3 に対応する */
-const VOICE_KINDS=['warm','space','male'];
+/* 声の種類。audio/<種類>/<言語>/<名前>.mp3 に対応する。
+   Ryoさんは録音した肉声で日本語のみ。英語では端末の読み上げに落ちる。 */
+const VOICE_KINDS=['warm','space','male','ryo'];
+const VOICE_LANGS={warm:['ja','en'],space:['ja','en'],male:['ja','en'],ryo:['ja']};
 const VOICE_FILE={
   'vo.inL':'inhale-left', 'vo.inR':'inhale-right', 'vo.hold':'hold',
   'vo.exL':'exhale-left', 'vo.exR':'exhale-right',
@@ -1603,6 +1607,8 @@ function speak(key){
   stopVoice();
   const name=VOICE_FILE[key];
   if(!name){ speakTTS(t(key)); return; }
+  /* その声が対応していない言語なら、取りに行かず読み上げに回す */
+  if(!VOICE_LANGS[S.voiceKind].includes(S.lang)){ speakTTS(t(key)); return; }
   const id=S.voiceKind+'/'+S.lang+'/'+name;
   if(voiceMissing[id]){ speakTTS(t(key)); return; }
 
@@ -1621,6 +1627,7 @@ function speak(key){
    初回再生時の読み込み待ちをなくし、取りこぼしを防ぐ。 */
 function preloadVoice(){
   if(!S.settings.voice) return;
+  if(!VOICE_LANGS[S.voiceKind].includes(S.lang)) return;
   Object.keys(VOICE_FILE).forEach(k=>{
     const id=S.voiceKind+'/'+S.lang+'/'+VOICE_FILE[k];
     if(!voiceMissing[id]){ try{ voiceNode(id).load(); }catch(e){} }

@@ -79,21 +79,47 @@ check('文言定義とコードの対応表が一致',
   names.length === Object.keys(phrases.ja).length &&
   names.every(n => n in phrases.ja), names.length + ' / ' + Object.keys(phrases.ja).length);
 
+// 声の種類ごとに対応言語が違う（録音した肉声は日本語のみ）のでその表も見る。
+const vlBlock = script.match(/const VOICE_LANGS=\{([\s\S]*?)\};/)[1];
+const voiceLangs = {};
+for (const m of vlBlock.matchAll(/(\w+):\s*\[([^\]]*)\]/g)) {
+  voiceLangs[m[1]] = m[2].split(',').map(s => s.trim().replace(/'/g, '')).filter(Boolean);
+}
+check('対応言語表が声の種類と一致',
+  kinds.length === Object.keys(voiceLangs).length && kinds.every(k => k in voiceLangs),
+  kinds.map(k => k + '(' + voiceLangs[k].join('/') + ')').join(' '));
+check('対応言語がすべて文言定義に存在',
+  Object.values(voiceLangs).every(ls => ls.every(l => langs.includes(l))));
+
 const missing = [];
-for (const k of kinds) for (const l of langs) for (const n of names) {
-  const f = path.join(ROOT, 'audio', k, l, n + '.mp3');
-  if (!fs.existsSync(f)) missing.push(k + '/' + l + '/' + n);
+let total = 0;
+for (const k of kinds) for (const l of voiceLangs[k]) for (const n of names) {
+  total++;
+  if (!fs.existsSync(path.join(ROOT, 'audio', k, l, n + '.mp3'))) missing.push(k + '/' + l + '/' + n);
 }
 check('音声ファイルが実在する', missing.length === 0,
-  missing.slice(0, 5).join(',') || (kinds.length * langs.length * names.length) + '件');
+  missing.slice(0, 5).join(',') || total + '件');
 
-/* Service Worker のキャッシュ対象と実ファイルの照合 */
-const swKinds = JSON.parse((sw.match(/for \(const kind of (\[[^\]]*\])/) || [])[1].replace(/'/g, '"'));
+// 対応していない言語のファイルを置いたままにしない（読み上げに落ちる前提が崩れる）
+const stray = [];
+for (const k of kinds) for (const l of langs) {
+  if (voiceLangs[k].includes(l)) continue;
+  if (fs.existsSync(path.join(ROOT, 'audio', k, l))) stray.push(k + '/' + l);
+}
+check('対応外の言語のファイルが残っていない', stray.length === 0, stray.join(',') || undefined);
+
+/* Service Worker のキャッシュ対象と実構成の照合 */
+const swSets = {};
+const swBlock = sw.match(/const VOICE_SETS = \[([\s\S]*?)\];/)[1];
+for (const m of swBlock.matchAll(/kind:\s*'(\w+)',\s*langs:\s*\[([^\]]*)\]/g)) {
+  swSets[m[1]] = m[2].split(',').map(s => s.trim().replace(/'/g, '')).filter(Boolean);
+}
 const swNames = JSON.parse('[' + sw.match(/for \(const n of \[([\s\S]*?)\]\)/)[1].replace(/'/g, '"') + ']');
-check('SW のキャッシュ対象が音声の実構成と一致',
-  swKinds.length === kinds.length && swKinds.every(k => kinds.includes(k)) &&
+check('SW のキャッシュ対象が本体の構成と一致',
+  Object.keys(swSets).length === kinds.length &&
+  kinds.every(k => swSets[k] && swSets[k].join() === voiceLangs[k].join()) &&
   swNames.length === names.length && swNames.every(n => names.includes(n)),
-  swKinds.join('/') + ' × ' + swNames.length + '件');
+  Object.keys(swSets).join('/') + ' × ' + swNames.length + '件');
 
 /* ---- 表示と実装の食い違い ---- */
 const mr = script.match(/const MIN_R=(\d+), MAX_R=(\d+)/);
