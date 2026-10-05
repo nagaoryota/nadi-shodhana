@@ -139,6 +139,11 @@ check('通知トグルが role=switch', (html.match(/role="switch"/g) || []).len
 check('トグルの状態を aria-checked で伝える', /setAttribute\('aria-checked',on\)/.test(script));
 check('プリセット選択が radiogroup/radio', /setAttribute\('role','radiogroup'\)/.test(script) && /role="radio"/.test(script));
 check('チップに選択状態がある', /aria-pressed/.test(script));
+// 声の選択は初回設定と通知設定の2箇所に出す。id だと1つしか持てないので class で揃える。
+check('声の選択が初回設定と通知設定の両方にある',
+  (html.match(/class="chips vk-chips"/g) || []).length === 2 &&
+  (html.match(/class="rds vk-desc"/g) || []).length === 2,
+  (html.match(/class="chips vk-chips"/g) || []).length + '箇所');
 check('アイコンのみのボタンに名前がある',
   (html.match(/data-aria=/g) || []).length >= 5 && /setAttribute\('aria-label'/.test(script),
   (html.match(/data-aria=/g) || []).length + '件');

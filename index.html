@@ -409,6 +409,11 @@ a.btn{display:block;text-decoration:none;}
         <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </button>
+      <div class="sub" style="padding:12px 0 14px 15px;">
+        <div class="chip-lb" style="margin-top:0" data-i="nt.voiceKind"></div>
+        <div class="chips vk-chips"></div>
+        <div class="rds vk-desc" style="margin-top:8px"></div>
+      </div>
       <button type="button" class="row" role="switch" data-tg="wake">
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
@@ -560,8 +565,8 @@ a.btn{display:block;text-decoration:none;}
       </button>
       <div class="sub" style="padding:12px 0 14px 15px;">
         <div class="chip-lb" style="margin-top:0" data-i="nt.voiceKind"></div>
-        <div class="chips" id="vkChips"></div>
-        <div class="rds" id="vkDesc" style="margin-top:8px"></div>
+        <div class="chips vk-chips"></div>
+        <div class="rds vk-desc" style="margin-top:8px"></div>
       </div>
       <button type="button" class="row" role="switch" data-tg="wake">
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
@@ -766,7 +771,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「最新版を確認」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.10.0';
+const APP_VERSION='1.11.0';
 
 /* =========================================================
    定数
@@ -1317,14 +1322,17 @@ function renderToggles(){
   });
   renderVoiceKind();
 }
+/* 初回設定と通知設定の2箇所に出るので、id ではなく class でまとめて描く */
 function renderVoiceKind(){
-  if(!document.getElementById('vkChips')) return;
-  segs(vkChips, VOICE_KINDS.map(v=>({v:v,l:t('vk.'+v)})), S.voiceKind, v=>{
-    S.voiceKind=v; save(); renderVoiceKind();
-    stopVoice();
-    if(S.settings.voice) speak('vo.inL');   /* 選んだ声をその場で確かめられる */
+  const opts=VOICE_KINDS.map(v=>({v:v,l:t('vk.'+v)}));
+  document.querySelectorAll('.vk-chips').forEach(box=>{
+    segs(box, opts, S.voiceKind, v=>{
+      S.voiceKind=v; save(); renderVoiceKind();
+      stopVoice();
+      if(S.settings.voice) speak('vo.inL');   /* 選んだ声をその場で確かめられる */
+    });
   });
-  vkDesc.textContent=t('vk.'+S.voiceKind+'D');
+  document.querySelectorAll('.vk-desc').forEach(d=>{ d.textContent=t('vk.'+S.voiceKind+'D'); });
 }
 function toggle(k){
   S.settings[k]=!S.settings[k]; save(); renderToggles();
