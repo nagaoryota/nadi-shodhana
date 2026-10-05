@@ -748,7 +748,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.7.1';
 
 /* =========================================================
    定数
@@ -1154,16 +1154,18 @@ function prepPaint(st,p){
   }
 
   const col = st.k==='in' ? 'var(--c-in)' : 'var(--c-ex)';
-  const h   = st.k==='in' ? (1-p) : p;          /* 吸う＝減る / 吐く＝増える */
+  const h   = st.k==='in' ? (1-p) : p;          /* 縦バー：吸う＝減る / 吐く＝増える */
   pel.left.className+=' act'; pel.right.className+=' act'; pel.top.className+=' act';
   const vs='position:absolute;left:3px;right:3px;top:3px;border-radius:5px;overflow:hidden;background:'+col+
            ';height:calc((100% - 6px) * '+h+')';
   fl.style.cssText=vs; fr.style.cssText=vs;
 
-  /* 上辺：吸う＝左右の端から中央へ満ちる／吐く＝その逆再生（中央から左右へ消える） */
-  const P = st.k==='in' ? 50*p : 50*(1-p);
-  ft.style.cssText='position:absolute;inset:3px;border-radius:5px;background:linear-gradient(to right,'+
-    col+' 0%,'+col+' '+P+'%,transparent '+P+'%,transparent '+(100-P)+'%,'+col+' '+(100-P)+'%,'+col+' 100%)';
+  /* 上辺：下端を固定し、吸う＝下から満ちる／吐く＝上から減る。
+     縦バーが減って上辺が満ちる＝息が腕を上って頭頂に溜まる、
+     上辺が減って縦バーが満ちる＝そこから戻っていく、という流れになる。 */
+  const tv = st.k==='in' ? p : (1-p);
+  ft.style.cssText='position:absolute;left:3px;right:3px;bottom:3px;border-radius:5px;background:'+col+
+                   ';height:calc((100% - 6px) * '+tv+')';
 }
 
 function prepLoop(){
