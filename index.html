@@ -711,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.3.1';
 
 /* =========================================================
    定数
@@ -1071,8 +1071,10 @@ function prepEnter(){
   const st=prun.steps[prun.idx];
   prepLabel.textContent=t(st.lab);
   prepLabel.style.color = st.k==='in' ? 'var(--c-in)' : (st.k==='ex' ? 'var(--c-ex)' : 'var(--muted)');
-  if(S.settings.sound) bell(st.k==='ex'?BELL_EX:BELL_IN,2.6,.16);
-  vibe(30);
+  /* 「間」では鳴らさない。呼吸フェーズではなく整えるための拍であり、
+     ここで鳴らすと1秒後のセッション開始の鐘と二重に聞こえる。 */
+  if(S.settings.sound && st.k!=='gap') bell(st.k==='ex'?BELL_EX:BELL_IN,2.6,.16);
+  if(st.k!=='gap') vibe(30);
   if(st.vo) speak(st.vo);
   /* 準備の導入呼吸にも呼吸音を乗せる */
   if(st.k==='in')      breathPlay('inhale',st.dur);
