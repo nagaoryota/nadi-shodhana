@@ -711,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.3.1';
+const APP_VERSION='1.4.0';
 
 /* =========================================================
    定数
@@ -1058,6 +1058,7 @@ const prun={active:false,steps:null,idx:0,t0:0,raf:0};
 const pel={top:document.getElementById('pTop'),left:document.getElementById('pLeft'),right:document.getElementById('pRight')};
 
 function startPrep(){
+  bowlStop();   /* 完了画面から続けて始めた場合、前回の余韻を断つ */
   prun.steps=prepSteps(); prun.idx=0; prun.active=true;
   audio(); wakeOn();
   go('prep');
@@ -1311,6 +1312,8 @@ document.getElementById('hClear').onclick=()=>{
 /* 鐘の基音。吸う＝明るく、止める＝控えめ、吐く＝最も低く収まる。
    C5 / G4 / F4 で互いに協和するので、連続して鳴っても濁らない。 */
 const BELL_IN=523.25, BELL_HOLD=392.00, BELL_EX=349.23;
+/* 終了のシンギングボウル。C4＝吸うチャイム C5 のオクターブ下 */
+const BOWL_FREQ=261.63;
 
 let actx=null, noiseBuf=null;
 function audio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
@@ -1362,6 +1365,64 @@ function bell(freq,dur,gain){
     n.start(t0);
   }catch(e){}
 }
+/* ---- シンギングボウル（セッション終了音） ----
+   ボウルの「ボーン」は、部分音が整数倍から大きく外れること
+   （実測でおよそ 1 : 2.76 : 5.18 : 8.42）と、各モードがわずかに
+   ずれて唸り（ビート）を作ることから生まれる。そのため部分音ごとに
+   2本の発振器を数Hzずらして重ね、ゆっくりしたうねりを出している。
+   基音は C4。吸うチャイム C5 のオクターブ下にあたり、締めくくりとして
+   解決して聞こえる。これより低いと携帯のスピーカーでは再生されない。 */
+const BOWL_PARTIALS=[
+  {r:1.00,  g:1.00, d:13.0, beat:0.7},
+  {r:2.76,  g:0.40, d:8.0,  beat:1.1},
+  {r:5.18,  g:0.19, d:4.5,  beat:1.6},
+  {r:8.42,  g:0.09, d:2.6,  beat:2.1},
+  {r:12.40, g:0.04, d:1.5,  beat:2.6},
+];
+let bowlNodes=null;
+function bowlStop(){
+  if(!bowlNodes) return;
+  bowlNodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
+  bowlNodes=null;
+}
+function singingBowl(freq,gain){
+  const a=resume(); if(!a) return;
+  bowlStop();
+  const t0=a.currentTime;
+  const out=a.createGain(); out.gain.value=gain;
+  const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=freq*13; lp.Q.value=.3;
+  lp.connect(out); out.connect(a.destination);
+
+  const nodes=[];
+  BOWL_PARTIALS.forEach(p=>{
+    [-1,1].forEach(side=>{      /* 2本をずらして重ね、唸りを作る */
+      const o=a.createOscillator(), g=a.createGain();
+      o.type='sine';
+      o.frequency.value=freq*p.r + side*p.beat/2;
+      g.gain.setValueAtTime(0,t0);
+      g.gain.linearRampToValueAtTime(p.g*.5,t0+.03);   /* 布巻きの撞木なので立ち上がりは瞬間的にしない */
+      g.gain.exponentialRampToValueAtTime(.0001,t0+p.d);
+      o.connect(g); g.connect(lp);
+      o.start(t0); o.stop(t0+p.d+.1);
+      nodes.push(o);
+    });
+  });
+
+  /* 撞木が当たる瞬間。金属的にならないよう高域を落とした短いノイズ */
+  try{
+    const len=Math.floor(a.sampleRate*.09);
+    const buf=a.createBuffer(1,len,a.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.2);
+    const n=a.createBufferSource(); n.buffer=buf;
+    const f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq*3.2; f.Q.value=.7;
+    const ng=a.createGain(); ng.gain.value=gain*.3;
+    n.connect(f); f.connect(ng); ng.connect(a.destination);
+    n.start(t0); nodes.push(n);
+  }catch(e){}
+
+  bowlNodes=nodes;
+}
+
 /* 秒ごとのティック。鐘と混ざらないよう、ごく短い柔らかい点にする */
 function tickSound(){
   const a=resume(); if(!a) return;
@@ -1701,8 +1762,9 @@ function stopSession(){
 function finish(){
   const p=run.p, total=roundSec(p)*run.rounds, rounds=run.rounds;
   stopSession();
-  if(S.settings.sound){ bell(BELL_IN,3.4,.17); setTimeout(()=>bell(BELL_IN*1.5,4.2,.14),220); }
-  vibe([40,60,40]);
+  /* 終了はシンギングボウル1打。長く伸びる響きで区切りを作る */
+  if(S.settings.sound) singingBowl(BOWL_FREQ,.22);
+  vibe(90);   /* 撞木の一打に合わせ、単発の長めの振動 */
   const today=new Date(), ds=ymd(today);
   if(S.streak.last!==ds){
     const y=new Date(today); y.setDate(y.getDate()-1);
