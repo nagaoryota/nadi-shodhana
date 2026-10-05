@@ -1,6 +1,6 @@
 /* ナディーショーダナ — Service Worker
    プロトタイプ用の最小構成。更新時は CACHE のバージョンを上げる。 */
-const CACHE = 'nadi-v8';
+const CACHE = 'nadi-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,7 @@ const ASSETS = [
 // never breaks the install step.
 for (const lang of ['ja', 'en']) {
   for (const n of ['inhale-left','inhale-right','hold','exhale-left','exhale-right',
-                   'prep-inhale','prep-exhale','prep-start']) {
+                   'prep-inhale','prep-exhale']) {
     ASSETS.push('./audio/' + lang + '/' + n + '.mp3');
   }
 }

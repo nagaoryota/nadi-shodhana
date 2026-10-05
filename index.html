@@ -644,14 +644,14 @@ ja:{
  'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
  'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
  'prep.posture':'楽な姿勢で、軽く目を閉じる','prep.in':'両鼻で大きく吸って','prep.ex':'両鼻で大きく吐いて','prep.gap':'左の鼻から始めます',
- 'prep.voIn':'両鼻で、大きく吸って','prep.voEx':'ゆっくり、はいて','prep.voGap':'左から',
+ 'prep.voIn':'両鼻で大きく吸って','prep.voEx':'ゆっくりはいて',
  'prep.warn':'開始の合図が鳴りません。音かバイブをONにしてください',
  'prep.warnLink':'通知設定へ',
  'hist.clear':'記録をすべて消去','hist.empty':'まだ実施記録がありません','hist.rounds':'ラウンド',
  'sess.taphint':'画面をタップすると一時停止します','sess.round':'ラウンド',
  'sess.paused':'一時停止中','sess.resume':'再開する','sess.end':'セッションを終了',
  'ph.inL':'左から・吸う','ph.inR':'右から・吸う','ph.hold':'止める（両鼻）','ph.exL':'左から・吐く','ph.exR':'右から・吐く',
- 'vo.inL':'左から吸って','vo.inR':'右から吸って','vo.hold':'止めて','vo.exL':'左から、はいて','vo.exR':'右から、はいて',
+ 'vo.inL':'左から吸って','vo.inR':'右から吸って','vo.hold':'止めて','vo.exL':'左からはいて','vo.exR':'右からはいて',
  'nose.l':'左','nose.r':'右',
  'done.title':'セッション完了！','done.rounds':'実施ラウンド','done.time':'所要時間','done.preset':'プリセット',
  'done.home':'ホームに戻る','done.again':'もう一度行う',
@@ -687,7 +687,7 @@ en:{
  'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
  'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
  'prep.posture':'Settle into a comfortable posture and gently close your eyes','prep.in':'Breathe in deeply through both nostrils','prep.ex':'Breathe out slowly through both nostrils','prep.gap':'Starting with the left nostril',
- 'prep.voIn':'Breathe in deeply through both nostrils','prep.voEx':'Breathe out slowly','prep.voGap':'From the left',
+ 'prep.voIn':'Breathe in deeply through both nostrils','prep.voEx':'Breathe out slowly',
  'prep.warn':'No start cue will sound. Turn on sound or vibration.',
  'prep.warnLink':'Open notification settings',
  'hist.clear':'Clear all records','hist.empty':'No sessions recorded yet','hist.rounds':'rounds',
@@ -711,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.4.2';
+const APP_VERSION='1.5.0';
 
 /* =========================================================
    定数
@@ -1051,7 +1051,8 @@ function prepSteps(){
   if(S.prepSeconds>0) a.push({k:'posture',dur:S.prepSeconds,lab:'prep.posture'});
   a.push({k:'in', dur:PREP_IN, lab:'prep.in', vo:'prep.voIn'});
   a.push({k:'ex', dur:PREP_EX, lab:'prep.ex', vo:'prep.voEx'});
-  a.push({k:'gap',dur:PREP_GAP,lab:'prep.gap',vo:'prep.voGap'});
+  /* 「間」では読み上げない。直後の本編①が「左から吸って」と言うため重複する */
+  a.push({k:'gap',dur:PREP_GAP,lab:'prep.gap'});
   return a;
 }
 const prun={active:false,steps:null,idx:0,t0:0,raf:0};
@@ -1489,7 +1490,7 @@ function vibe(ms){ if(S.settings.vibe&&navigator.vibrate) try{navigator.vibrate(
 const VOICE_FILE={
   'vo.inL':'inhale-left', 'vo.inR':'inhale-right', 'vo.hold':'hold',
   'vo.exL':'exhale-left', 'vo.exR':'exhale-right',
-  'prep.voIn':'prep-inhale', 'prep.voEx':'prep-exhale', 'prep.voGap':'prep-start',
+  'prep.voIn':'prep-inhale', 'prep.voEx':'prep-exhale',
 };
 const voiceMissing={}, voiceEl={};
 let curVoice=null;

@@ -107,34 +107,34 @@
 
 ### 音声ガイド
 
-`audio/ja/` と `audio/en/` に合成済みの音声を同梱しています（計 16 ファイル・約 131 KB）。ファイルが読めない環境では自動的に端末の読み上げ機能に切り替わるため、一部が欠けても動作します。
+`audio/ja/` と `audio/en/` に合成済みの音声を同梱しています（計 14 ファイル）。Microsoft のニューラル音声（日本語 Nanami / 英語 Jenny）で合成しており、落ち着いた誘導になるよう既定よりゆっくり話させています。ファイルが読めない環境では自動的に端末の読み上げ機能に切り替わるため、一部が欠けても動作します。
 
 | ファイル名 | 日本語 | English |
 | --- | --- | --- |
 | `inhale-left` | 左から吸って | Inhale through the left |
 | `inhale-right` | 右から吸って | Inhale through the right |
 | `hold` | 止めて | Hold |
-| `exhale-left` | 左から吐いて | Exhale through the left |
-| `exhale-right` | 右から吐いて | Exhale through the right |
-| `prep-inhale` | 両鼻で、大きく吸って | Breathe in deeply through both nostrils |
-| `prep-exhale` | ゆっくり吐いて | Breathe out slowly |
-| `prep-start` | 左から | From the left |
+| `exhale-left` | 左からはいて | Exhale through the left |
+| `exhale-right` | 右からはいて | Exhale through the right |
+| `prep-inhale` | 両鼻で大きく吸って | Breathe in deeply through both nostrils |
+| `prep-exhale` | ゆっくりはいて | Breathe out slowly |
 
-`prep-start` だけ画面表示（「左の鼻から始めます」）より短い文言です。このステップは 1 秒しかなく、全文を読むと次のフェーズに食い込んで途中で切れるためです。音声は文字より簡潔なほうが自然なので、表示と読み上げを別に持っています。
+「吐いて」をひらがなで書いているのは、「吐く」に「はく」と「つく」（嘘をつく）の 2 つの読みがあり、合成エンジンが後者を選ぶことがあるためです。ひらがななら読みが一意に定まります。
+
+準備シーケンスの「間」では読み上げません。直後に本編の「左から吸って」が流れるため、重複して聞こえるからです。画面には「左の鼻から始めます」と表示されます。
 
 ### 音声の作り直し
 
-`tools/` に生成スクリプトがあります。Windows の音声合成（SAPI）と ffmpeg を使います。
-
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/gen-voice.ps1
+pip install edge-tts
+python tools/gen-voice.py
 ```
 
-文言を変えるときは `tools/voice-phrases.json` を編集してから実行してください。生成された WAV を ffmpeg で前後の無音除去・音量正規化（-18 LUFS）し、24 kHz モノラル 56 kbps の MP3 に変換したものが `audio/` の中身です。
+文言を変えるときは `tools/voice-phrases.json` を編集してから実行してください。生成時だけネットワークが必要です（出力は静的ファイルなので、アプリ実行時に外部通信は発生しません）。ffmpeg が PATH にあることも必要です。
 
-`gen-voice.ps1` は **ASCII のみで記述する** 必要があります。Windows PowerShell 5.1 は BOM の無いスクリプトを ANSI として読むため、コメントであっても非 ASCII 文字を含めると構文解析が壊れます。読み上げる文言を JSON 側に分離しているのはこのためです。
+生成後、ffmpeg で前後の無音除去・音量正規化（-18 LUFS）を行い、**44.1 kHz** モノラル 64 kbps の MP3 に変換しています。24 kHz は MPEG-2 拡張にあたり、デコーダによって再生されない端末があるため避けています。先頭に 20 ms の余白を入れているのは、エンコーダ遅延で語頭が欠けるのを防ぐためです。
 
-各音声は、対応するフェーズの最短長より短くなければなりません（例：`prep-inhale` は準備の吸気 3 秒以内）。超えると次の案内に切られます。
+各音声は対応するフェーズの最短長より短くなければなりません（例：`prep-inhale` は準備の吸気 3 秒以内）。超えると次の案内に切られます。スクリプトは生成後にこれを検証し、収まらないものがあれば失敗します。
 
 実施記録と連続日数は端末内（localStorage）にのみ保存され、外部には送信されません。
 
