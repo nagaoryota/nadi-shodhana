@@ -644,7 +644,7 @@ ja:{
  'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
  'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
  'prep.posture':'楽な姿勢で、軽く目を閉じる','prep.in':'両鼻で大きく吸って','prep.ex':'両鼻で大きく吐いて','prep.gap':'左の鼻から始めます',
- 'prep.voIn':'両鼻で、大きく吸って','prep.voEx':'ゆっくり吐いて','prep.voGap':'左の鼻から始めます',
+ 'prep.voIn':'両鼻で、大きく吸って','prep.voEx':'ゆっくり吐いて','prep.voGap':'左から',
  'prep.warn':'開始の合図が鳴りません。音かバイブをONにしてください',
  'prep.warnLink':'通知設定へ',
  'hist.clear':'記録をすべて消去','hist.empty':'まだ実施記録がありません','hist.rounds':'ラウンド',
@@ -687,7 +687,7 @@ en:{
  'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
  'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
  'prep.posture':'Settle into a comfortable posture and gently close your eyes','prep.in':'Breathe in deeply through both nostrils','prep.ex':'Breathe out slowly through both nostrils','prep.gap':'Starting with the left nostril',
- 'prep.voIn':'Breathe in deeply through both nostrils','prep.voEx':'Breathe out slowly','prep.voGap':'Starting with the left nostril',
+ 'prep.voIn':'Breathe in deeply through both nostrils','prep.voEx':'Breathe out slowly','prep.voGap':'From the left',
  'prep.warn':'No start cue will sound. Turn on sound or vibration.',
  'prep.warnLink':'Open notification settings',
  'hist.clear':'Clear all records','hist.empty':'No sessions recorded yet','hist.rounds':'rounds',
@@ -711,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.3.0';
 
 /* =========================================================
    定数
@@ -766,7 +766,7 @@ const DEF_STATE={
   rounds:{'4-8-8':4,'6-12-12':3,'4-16-8':3,'custom':4},
   prepSeconds:5,
   custom:{inhale:4,hold:8,exhale:8},
-  settings:{sound:true,breath:true,tick:false,vibe:true,voice:false,wake:true,bg:true,bgm:false},
+  settings:{sound:true,breath:true,tick:false,vibe:true,voice:true,wake:true,bg:true,bgm:false},
   streak:{count:0,last:null},
   history:[],
 };

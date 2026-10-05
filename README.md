@@ -105,30 +105,36 @@
 
 息そのものに近い帯域ノイズです。吸うときは中心周波数が上がりながら膨らみ、吐くときは下がりながら減衰します。音階を持たないのでチャイムと喧嘩しません。一時停止して再開した場合は、残り時間に合わせて鳴らし直します。
 
-### 音声ガイド（録音ファイルの差し替え）
+### 音声ガイド
 
-既定では端末の読み上げ機能を使いますが、**録音ファイルを置くとそちらが優先** されます。ファイルが無い場合は自動的に読み上げに戻るため、一部だけ用意しても動きます。
+`audio/ja/` と `audio/en/` に合成済みの音声を同梱しています（計 16 ファイル・約 131 KB）。ファイルが読めない環境では自動的に端末の読み上げ機能に切り替わるため、一部が欠けても動作します。
 
-`audio/<言語>/<名前>.mp3` に置いてください。
+| ファイル名 | 日本語 | English |
+| --- | --- | --- |
+| `inhale-left` | 左から吸って | Inhale through the left |
+| `inhale-right` | 右から吸って | Inhale through the right |
+| `hold` | 止めて | Hold |
+| `exhale-left` | 左から吐いて | Exhale through the left |
+| `exhale-right` | 右から吐いて | Exhale through the right |
+| `prep-inhale` | 両鼻で、大きく吸って | Breathe in deeply through both nostrils |
+| `prep-exhale` | ゆっくり吐いて | Breathe out slowly |
+| `prep-start` | 左から | From the left |
 
-| ファイル名 | 読み上げている内容（日本語） |
-| --- | --- |
-| `inhale-left.mp3` | 左から吸って |
-| `inhale-right.mp3` | 右から吸って |
-| `hold.mp3` | 止めて |
-| `exhale-left.mp3` | 左から吐いて |
-| `exhale-right.mp3` | 右から吐いて |
-| `prep-inhale.mp3` | 両鼻で、大きく吸って |
-| `prep-exhale.mp3` | ゆっくり吐いて |
-| `prep-start.mp3` | 左の鼻から始めます |
+`prep-start` だけ画面表示（「左の鼻から始めます」）より短い文言です。このステップは 1 秒しかなく、全文を読むと次のフェーズに食い込んで途中で切れるためです。音声は文字より簡潔なほうが自然なので、表示と読み上げを別に持っています。
 
-日本語は `audio/ja/`、英語は `audio/en/` に同じファイル名で置きます（計 16 ファイル）。英語の文言は設定を英語にしたときの読み上げ内容に合わせてください。
+### 音声の作り直し
 
-録音のめやす：
+`tools/` に生成スクリプトがあります。Windows の音声合成（SAPI）と ffmpeg を使います。
 
-- 2 秒以内。フェーズをまたいで残ると次の案内と重なります
-- 前後の無音は詰める。再生開始が遅れて聞こえます
-- 音量はチャイムと同程度に。極端に大きいと落ち着きません
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/gen-voice.ps1
+```
+
+文言を変えるときは `tools/voice-phrases.json` を編集してから実行してください。生成された WAV を ffmpeg で前後の無音除去・音量正規化（-18 LUFS）し、24 kHz モノラル 56 kbps の MP3 に変換したものが `audio/` の中身です。
+
+`gen-voice.ps1` は **ASCII のみで記述する** 必要があります。Windows PowerShell 5.1 は BOM の無いスクリプトを ANSI として読むため、コメントであっても非 ASCII 文字を含めると構文解析が壊れます。読み上げる文言を JSON 側に分離しているのはこのためです。
+
+各音声は、対応するフェーズの最短長より短くなければなりません（例：`prep-inhale` は準備の吸気 3 秒以内）。超えると次の案内に切られます。
 
 実施記録と連続日数は端末内（localStorage）にのみ保存され、外部には送信されません。
 

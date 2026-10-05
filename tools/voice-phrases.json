@@ -1,0 +1,22 @@
+{
+  "ja": {
+    "inhale-left": "左から吸って",
+    "inhale-right": "右から吸って",
+    "hold": "止めて",
+    "exhale-left": "左から吐いて",
+    "exhale-right": "右から吐いて",
+    "prep-inhale": "両鼻で、大きく吸って",
+    "prep-exhale": "ゆっくり吐いて",
+    "prep-start": "左から"
+  },
+  "en": {
+    "inhale-left": "Inhale through the left",
+    "inhale-right": "Inhale through the right",
+    "hold": "Hold",
+    "exhale-left": "Exhale through the left",
+    "exhale-right": "Exhale through the right",
+    "prep-inhale": "Breathe in deeply through both nostrils",
+    "prep-exhale": "Breathe out slowly",
+    "prep-start": "From the left"
+  }
+}

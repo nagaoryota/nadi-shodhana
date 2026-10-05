@@ -1,0 +1,2 @@
+# TTS の中間生成物（WAV）。配布するのは audio/ 配下の MP3 のみ
+tools/build/
