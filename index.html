@@ -541,6 +541,11 @@ body{
         <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
+      <div class="sub" style="padding:12px 0 14px 15px;">
+        <div class="chip-lb" style="margin-top:0" data-i="nt.voiceKind"></div>
+        <div class="chips" id="vkChips"></div>
+        <div class="rds" id="vkDesc" style="margin-top:8px"></div>
+      </div>
       <div class="row" data-tg="wake">
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
@@ -640,6 +645,11 @@ ja:{
  'nt.voice':'音声ガイド','nt.voiceD':'「左から吸って」等を読み上げ',
  'nt.wake':'画面を消さない','nt.wakeD':'セッション中は自動ロックを抑止',
  'nt.breath':'呼吸音','nt.breathD':'吸う・吐くに合わせて息の音が動く',
+ 'nt.voiceKind':'声の種類',
+ 'vk.warm':'やわらか','vk.space':'ひろがり','vk.male':'男性',
+ 'vk.warmD':'高域を抑えた、落ち着いた女性の声',
+ 'vk.spaceD':'やわらかに薄い残響を加え、奥行きを出した声',
+ 'vk.maleD':'低めの、落ち着いた男性の声',
  'nt.bgm':'BGM','nt.bgmD':'セッション中に環境音を再生',
  'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
  'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
@@ -683,6 +693,11 @@ en:{
  'nt.voice':'Voice guide','nt.voiceD':'Reads out “Inhale through the left” and so on',
  'nt.wake':'Keep screen on','nt.wakeD':'Prevents auto-lock during a session',
  'nt.breath':'Breath sound','nt.breathD':'A soft breath sound that follows each inhale and exhale',
+ 'nt.voiceKind':'Voice',
+ 'vk.warm':'Soft','vk.space':'Spacious','vk.male':'Male',
+ 'vk.warmD':'A calm female voice with the highs eased back',
+ 'vk.spaceD':'The soft voice with a touch of reverb for depth',
+ 'vk.maleD':'A low, calm male voice',
  'nt.bgm':'Background sound','nt.bgmD':'Play ambient sound during a session',
  'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
  'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
@@ -711,7 +726,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.6.0';
 
 /* =========================================================
    定数
@@ -767,6 +782,7 @@ const DEF_STATE={
   prepSeconds:5,
   custom:{inhale:4,hold:8,exhale:8},
   settings:{sound:true,breath:true,tick:false,vibe:true,voice:true,wake:true,bg:true,bgm:false},
+  voiceKind:'warm',
   streak:{count:0,last:null},
   history:[],
 };
@@ -805,6 +821,7 @@ function load(){
   const ids=[...PRESETS.map(p=>p.id),'custom'];
   S.presetId = pick1(o.presetId, ids, DEF_STATE.presetId);
   S.prepSeconds = PREPS.includes(Number(o.prepSeconds)) ? Number(o.prepSeconds) : DEF_STATE.prepSeconds;
+  S.voiceKind = pick1(o.voiceKind, VOICE_KINDS, DEF_STATE.voiceKind);
 
   if(o.rounds && typeof o.rounds==='object'){
     ids.forEach(id=>{ if(id in o.rounds) S.rounds[id]=num(o.rounds[id],MIN_R,MAX_R,DEF_STATE.rounds[id]); });
@@ -1233,6 +1250,16 @@ function renderToggles(){
   document.querySelectorAll('[data-tg]').forEach(r=>{
     r.querySelector('.sw').className='sw '+(S.settings[r.dataset.tg]?'on':'off');
   });
+  renderVoiceKind();
+}
+function renderVoiceKind(){
+  if(!document.getElementById('vkChips')) return;
+  segs(vkChips, VOICE_KINDS.map(v=>({v:v,l:t('vk.'+v)})), S.voiceKind, v=>{
+    S.voiceKind=v; save(); renderVoiceKind();
+    stopVoice();
+    if(S.settings.voice) speak('vo.inL');   /* 選んだ声をその場で確かめられる */
+  });
+  vkDesc.textContent=t('vk.'+S.voiceKind+'D');
 }
 function toggle(k){
   S.settings[k]=!S.settings[k]; save(); renderToggles();
@@ -1487,6 +1514,8 @@ function vibe(ms){ if(S.settings.vibe&&navigator.vibrate) try{navigator.vibrate(
    録音ファイルがあればそれを再生し、無ければ端末の読み上げに落とす。
    ファイルは audio/<lang>/<name>.mp3 に置く（README 参照）。
    一度 404 を踏んだ組み合わせは覚えておき、毎回取りに行かない。 */
+/* 声の種類。audio/<種類>/<言語>/<名前>.mp3 に対応する */
+const VOICE_KINDS=['warm','space','male'];
 const VOICE_FILE={
   'vo.inL':'inhale-left', 'vo.inR':'inhale-right', 'vo.hold':'hold',
   'vo.exL':'exhale-left', 'vo.exR':'exhale-right',
@@ -1511,7 +1540,7 @@ function speak(key){
   stopVoice();
   const name=VOICE_FILE[key];
   if(!name){ speakTTS(t(key)); return; }
-  const id=S.lang+'/'+name;
+  const id=S.voiceKind+'/'+S.lang+'/'+name;
   if(voiceMissing[id]){ speakTTS(t(key)); return; }
 
   const el=voiceNode(id);
@@ -1530,7 +1559,7 @@ function speak(key){
 function preloadVoice(){
   if(!S.settings.voice) return;
   Object.keys(VOICE_FILE).forEach(k=>{
-    const id=S.lang+'/'+VOICE_FILE[k];
+    const id=S.voiceKind+'/'+S.lang+'/'+VOICE_FILE[k];
     if(!voiceMissing[id]){ try{ voiceNode(id).load(); }catch(e){} }
   });
 }
