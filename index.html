@@ -173,7 +173,8 @@ body{
 
 /* ---------- ratio bar ---------- */
 .ratio{display:flex;gap:2px;margin-top:9px;height:calc(15px * var(--fs));border-radius:4px;overflow:hidden;}
-.ratio>div{display:flex;align-items:center;justify-content:center;font-size:calc(8.5px * var(--fs));font-weight:700;}
+.ratio>div{display:flex;align-items:center;justify-content:center;font-size:calc(8.5px * var(--fs));font-weight:700;
+            min-width:0;overflow:hidden;}  /* 0% 指定を効かせる（既定の min-width:auto だと文字幅が残る） */
 .r-in{background:var(--c-in);color:var(--on-in);}
 .r-ho{background:var(--c-hold);color:var(--on-hold);}
 .r-ex{background:var(--c-ex);color:var(--on-ex);}
@@ -689,7 +690,7 @@ ja:{
  'ob.title2':'お知らせのしかた','ob.sub2':'フェーズの切り替わりをどう伝えるか選んでください。画面を見ずに呼吸したい場合は音か振動をおすすめします。',
  'ob.next':'次へ','ob.back':'戻る','ob.start':'はじめる',
  'u.rounds':'ラウンド','u.about':'約','u.streak':'日連続','u.min':'分','u.sec':'秒','u.custom':'カスタム',
- 'sheet.rounds':'ラウンド数','sheet.roundsHint':'3〜20の範囲で指定できます','sheet.ok':'決定','sheet.cancel':'キャンセル',
+ 'sheet.rounds':'ラウンド数','sheet.roundsHint':'{min}〜{max}の範囲で指定できます','sheet.ok':'決定','sheet.cancel':'キャンセル',
  'about.body':'ナディーショーダナ（片鼻呼吸法）のためのガイドアプリです。<br><br>1ラウンドは「左から吸う → 止める → 右から吐く → 右から吸う → 止める → 左から吐く」の6フェーズで構成されます。<br><br>縦のバーは上端を固定して高さが増減します。減る＝吸う、増える＝吐く。上のバーは止めている間、息が入ってきた側から減っていきます。<br><br>記録は端末内にのみ保存されます。'
 },
 en:{
@@ -739,7 +740,7 @@ en:{
  'ob.title2':'How to be notified','ob.sub2':'Choose how each phase change is signalled. Sound or vibration lets you breathe without watching the screen.',
  'ob.next':'Next','ob.back':'Back','ob.start':'Get started',
  'u.rounds':'rounds','u.about':'about','u.streak':'day streak','u.min':'min','u.sec':'sec','u.custom':'Custom',
- 'sheet.rounds':'Rounds','sheet.roundsHint':'Choose a number between 3 and 20','sheet.ok':'OK','sheet.cancel':'Cancel',
+ 'sheet.rounds':'Rounds','sheet.roundsHint':'Choose a number between {min} and {max}','sheet.ok':'OK','sheet.cancel':'Cancel',
  'about.body':'A guide app for Nadi Shodhana (alternate nostril breathing).<br><br>One round has six phases: inhale left → hold → exhale right → inhale right → hold → exhale left.<br><br>The vertical bars are anchored at the top and change in height: shrinking means inhaling, growing means exhaling. While you hold, the top bar empties from the side the breath came in.<br><br>All records stay on your device.'
 }};
 function t(k){ return (T[S.lang]&&T[S.lang][k]) || T.ja[k] || k; }
@@ -748,7 +749,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.7.1';
+const APP_VERSION='1.7.2';
 
 /* =========================================================
    定数
@@ -903,7 +904,7 @@ function applyLang(){
    ユーティリティ
    ========================================================= */
 function presetById(id){
-  if(id==='custom') return Object.assign({id:'custom',def:8},S.custom);
+  if(id==='custom') return Object.assign({id:'custom',def:DEF_STATE.rounds.custom},S.custom);
   return PRESETS.find(p=>p.id===id)||PRESETS[0];
 }
 function roundSec(p){ return (p.inhale+p.hold+p.exhale)*2; }
@@ -1228,14 +1229,15 @@ function renderPresets(){
 }
 
 function askRounds(pid){
-  sheet(t('sheet.rounds'),t('sheet.roundsHint'),roundsFor(pid),MIN_R,MAX_R,v=>{
+  const hint=t('sheet.roundsHint').replace('{min}',MIN_R).replace('{max}',MAX_R);
+  sheet(t('sheet.rounds'),hint,roundsFor(pid),MIN_R,MAX_R,v=>{
     S.rounds[pid]=v; save(); renderPresets();
   });
 }
 function sheet(title,hint,val,min,max,ok){
   const d=document.createElement('div');
   d.className='sheet';
-  d.innerHTML='<div class="sheet-in"><h4>'+title+'</h4><div class="hint">'+hint+'</div>'+
+  d.innerHTML='<div class="sheet-in"><h4>'+esc(title)+'</h4><div class="hint">'+esc(hint)+'</div>'+
     '<input class="num" type="number" inputmode="numeric" min="'+min+'" max="'+max+'" value="'+val+'">'+
     '<button class="btn p" style="margin-top:16px">'+t('sheet.ok')+'</button>'+
     '<button class="btn s">'+t('sheet.cancel')+'</button></div>';
