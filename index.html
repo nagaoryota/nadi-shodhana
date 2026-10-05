@@ -55,11 +55,13 @@
   --inputbd:#333d5c;
   --btn2:#242c45;
   --radio:#5a6490;
-  --swoff:#5a6490;
-  --swoffbd:rgba(255,255,255,.35);
+  --swoff:#434d68;              /* 仕様書 §6：OFFトグルの暗所視認性 */
+  --swoffbd:#717c98;
 
+  /* 仕様書 v1.0 §1.2：アンバー(継続記録)とオレンジ(吐く)は別色。
+     同一色にすると「アンバー＝継続記録専用」の意味が呼吸ビジュアルと混ざる。 */
   --action:#45dfb1;  --on-action:#06301f;  --action-soft:rgba(69,223,177,.15);
-  --streak:#f0a365;  --streak-bg:rgba(240,163,101,.14);
+  --streak:#f0a73a;  --streak-bg:rgba(240,167,58,.14);
   --c-in:#45dfb1;    --on-in:#06301f;
   --c-hold:#a78bfa;  --on-hold:#2a1a4a;
   --c-ex:#f0a365;    --on-ex:#4a2a05;
@@ -102,10 +104,10 @@
   /* 白地で白文字を載せても、白地に文字として置いても AA(4.5:1) を満たす深さまで
      明度を落としている。色相はダークと同じ（緑＝吸う/操作、紫＝止める、橙＝吐く/記録）。 */
   --action:#087d5c;  --on-action:#ffffff;  --action-soft:rgba(8,125,92,.13);
-  --streak:#ad5f18;  --streak-bg:rgba(173,95,24,.12);
+  --streak:#8a6212;  --streak-bg:rgba(138,98,18,.12);   /* アンバー系（黄寄り） */
   --c-in:#087d5c;    --on-in:#ffffff;
   --c-hold:#6f4fe0;  --on-hold:#ffffff;
-  --c-ex:#ad5f18;    --on-ex:#ffffff;
+  --c-ex:#ad5f18;    --on-ex:#ffffff;                   /* オレンジ系（赤寄り）。上と別色 */
   --sel-bg:#e3f2ec;
 
   --tube-bg:#e6e9f0;
@@ -213,9 +215,46 @@ body{
 .sub{padding-left:15px;border-left:2px solid var(--softbd);}
 .sw{width:44px;height:24px;border-radius:13px;position:relative;flex:none;transition:background .18s;}
 .sw.on{background:var(--action);}
-.sw.off{background:var(--swoff);border:1px solid var(--swoffbd);}
+.sw.off{background:var(--swoff);border:1.5px solid var(--swoffbd);}
 .kb{position:absolute;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px var(--shadow);transition:left .18s,right .18s;}
 .sw.on .kb{right:2px;} .sw.off .kb{left:1px;}
+
+/* ---------- 準備時間ピッカー（仕様書 §3） ---------- */
+.pick-wrap{margin-top:20px;flex:none;}
+.pick-lb{font-size:calc(10px * var(--fs));color:var(--dim);text-align:center;letter-spacing:.04em;}
+.pick-rail{position:relative;height:34px;margin-top:7px;}
+.pick-pill{
+  position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:62px;height:34px;border-radius:9px;background:var(--soft);border:1px solid var(--softbd);
+}
+.pick-scroll{
+  position:absolute;inset:0;display:flex;align-items:center;
+  overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.pick-scroll::-webkit-scrollbar{display:none;}
+.pick-item{
+  flex:none;width:62px;text-align:center;scroll-snap-align:center;
+  font-size:calc(13px * var(--fs));font-weight:700;color:var(--muted);
+  transition:color .15s;
+}
+.pick-item.on{color:var(--text);}
+.pick-fade{position:absolute;top:0;bottom:0;width:46px;pointer-events:none;}
+.pick-fade.l{left:0;background:linear-gradient(to right,var(--surface),transparent);}
+.pick-fade.r{right:0;background:linear-gradient(to left,var(--surface),transparent);}
+.pick-note{
+  font-size:calc(10px * var(--fs));color:var(--streak);text-align:center;
+  margin-top:8px;line-height:1.6;display:none;
+}
+.pick-note.on{display:block;}
+.pick-note u{cursor:pointer;}
+
+/* 準備シーケンスの中央カウント（∩ の開口部） */
+.prep-num{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-38%);
+  text-align:center;font-size:calc(56px * var(--fs));font-weight:300;color:var(--text);
+  line-height:1;
+}
 
 /* ---------- 表示設定 ---------- */
 .grp{margin-bottom:22px;}
@@ -226,10 +265,11 @@ body{
 #session{padding-left:16px;padding-right:16px;}
 .s-head{font-size:calc(10.5px * var(--fs));color:var(--dim);text-align:center;letter-spacing:.04em;flex:none;}
 .rigwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
-.rig{position:relative;width:208px;height:232px;}
-.tube{position:absolute;background:var(--tube-bg);border:1.5px solid var(--tube-bd);border-radius:7px;}
+/* 仕様書 §8.1：rig 180×200、3本とも同じ太さ、角丸は厚みの約20%、上辺と縦バーの間隙12px */
+.rig{position:relative;width:180px;height:200px;}
+.tube{position:absolute;background:var(--tube-bg);border:1.5px solid var(--tube-bd);border-radius:8px;}
 .tube.h{top:0;left:0;right:0;height:var(--bar);}
-.tube.v{top:calc(var(--bar) + 14px);bottom:0;width:var(--bar);}
+.tube.v{top:calc(var(--bar) + 12px);bottom:0;width:var(--bar);}
 .tube.v.l{left:0;} .tube.v.r{right:0;}
 .tube.fut{border-color:var(--tube-bd-fut);background:var(--tube-fut);}
 .tube.act{border-color:var(--tube-bd-act);}
@@ -246,6 +286,10 @@ body{
 .dots{display:flex;align-items:center;justify-content:center;gap:5px;flex:none;margin-top:auto;padding-top:16px;flex-wrap:wrap;}
 .dot{height:6px;border-radius:3px;background:var(--dot);}
 .dot.dn{background:var(--neutral);} .dot.cur{background:var(--action);}
+/* ラウンド13以上のときの連続バー表示 */
+.rbar{width:180px;height:6px;border-radius:3px;background:var(--dot);overflow:hidden;}
+.rbar-fill{height:100%;background:var(--neutral);border-radius:3px;transition:width .3s;}
+.rbar-tx{width:100%;text-align:center;font-size:calc(10px * var(--fs));color:var(--dim);margin-top:7px;}
 .taphint{text-align:center;font-size:calc(10px * var(--fs));color:var(--dim);margin-top:12px;flex:none;}
 
 .ovl{
@@ -347,6 +391,10 @@ body{
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
+      <div class="row" data-tg="bg">
+        <div><div class="rnm" data-i="nt.bg"></div><div class="rds" data-i="nt.bgD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
     </div>
 
     <div class="btns">
@@ -361,12 +409,39 @@ body{
     <div class="logo" data-i="app.name"></div>
     <div class="logo-sub" data-i="app.sub"></div>
     <button class="start" id="btnStart" data-i="home.start"></button>
+
+    <!-- 準備時間ピッカー（仕様書 §3）。選択ピルは中央固定で値の方が流れる -->
+    <div class="pick-wrap">
+      <div class="pick-lb" data-i="prep.label"></div>
+      <div class="pick-rail">
+        <div class="pick-pill"></div>
+        <div class="pick-scroll" id="prepScroll"></div>
+        <div class="pick-fade l"></div><div class="pick-fade r"></div>
+      </div>
+      <div class="pick-note" id="prepWarn"></div>
+    </div>
+
     <button class="cur-card" data-go="presets">
       <div class="r1"><span class="nm" id="hNm"></span><span class="cv">›</span></div>
       <div class="ratio" id="hRatio"></div>
       <div class="mt" id="hMeta"></div>
     </button>
     <div class="streak-wrap"><span class="streak" id="hStreak"></span></div>
+  </section>
+
+  <!-- ===== 準備シーケンス（仕様書 §7） ===== -->
+  <section class="screen" id="prep">
+    <div class="hdr"><button class="icobtn" id="prepCancel">←</button><span></span><span style="width:26px"></span></div>
+    <div class="rigwrap">
+      <div class="rig">
+        <div class="tube h" id="pTop"><div class="fill"></div></div>
+        <div class="tube v l" id="pLeft"><div class="fill"></div></div>
+        <div class="tube v r" id="pRight"><div class="fill"></div></div>
+        <div class="prep-num" id="prepNum"></div>
+      </div>
+    </div>
+    <div class="plab" id="prepLabel"></div>
+    <div class="taphint" data-i="prep.skip"></div>
   </section>
 
   <!-- ===== PRESETS ===== -->
@@ -455,6 +530,14 @@ body{
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
+      <div class="row" data-tg="bg">
+        <div><div class="rnm" data-i="nt.bg"></div><div class="rds" data-i="nt.bgD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
+      <div class="row" data-tg="bgm">
+        <div><div class="rnm" data-i="nt.bgm"></div><div class="rds" data-i="nt.bgmD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
     </div>
   </section>
 
@@ -539,6 +622,13 @@ ja:{
  'nt.vibe':'バイブレーション','nt.vibeD':'画面を見なくても振動で分かる',
  'nt.voice':'音声ガイド','nt.voiceD':'「左から吸って」等を読み上げ',
  'nt.wake':'画面を消さない','nt.wakeD':'セッション中は自動ロックを抑止',
+ 'nt.bgm':'BGM','nt.bgmD':'セッション中に環境音を再生',
+ 'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
+ 'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
+ 'prep.posture':'楽な姿勢で、軽く目を閉じる','prep.in':'両鼻で大きく吸って','prep.ex':'両鼻で大きく吐いて','prep.gap':'左の鼻から始めます',
+ 'prep.voIn':'両鼻で、大きく吸って','prep.voEx':'ゆっくり吐いて','prep.voGap':'左の鼻から始めます',
+ 'prep.warn':'開始の合図が鳴りません。音かバイブをONにしてください',
+ 'prep.warnLink':'通知設定へ',
  'hist.clear':'記録をすべて消去','hist.empty':'まだ実施記録がありません','hist.rounds':'ラウンド',
  'sess.taphint':'画面をタップすると一時停止します','sess.round':'ラウンド',
  'sess.paused':'一時停止中','sess.resume':'再開する','sess.end':'セッションを終了',
@@ -572,6 +662,13 @@ en:{
  'nt.vibe':'Vibration','nt.vibeD':'Feel each change without looking at the screen',
  'nt.voice':'Voice guide','nt.voiceD':'Reads out “Inhale through the left” and so on',
  'nt.wake':'Keep screen on','nt.wakeD':'Prevents auto-lock during a session',
+ 'nt.bgm':'Background sound','nt.bgmD':'Play ambient sound during a session',
+ 'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
+ 'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
+ 'prep.posture':'Settle into a comfortable posture and gently close your eyes','prep.in':'Breathe in deeply through both nostrils','prep.ex':'Breathe out slowly through both nostrils','prep.gap':'Starting with the left nostril',
+ 'prep.voIn':'Breathe in deeply through both nostrils','prep.voEx':'Breathe out slowly','prep.voGap':'Starting with the left nostril',
+ 'prep.warn':'No start cue will sound. Turn on sound or vibration.',
+ 'prep.warnLink':'Open notification settings',
  'hist.clear':'Clear all records','hist.empty':'No sessions recorded yet','hist.rounds':'rounds',
  'sess.taphint':'Tap anywhere to pause','sess.round':'Round',
  'sess.paused':'Paused','sess.resume':'Resume','sess.end':'End session',
@@ -594,18 +691,25 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 /* =========================================================
    定数
    ========================================================= */
+/* 仕様書 v1.0 §4。既定ラウンド数は固定値ではなく初期値。 */
 const PRESETS=[
-  {id:'4-8-8',   inhale:4, hold:8,  exhale:8,  def:8},
-  {id:'6-12-12', inhale:6, hold:12, exhale:12, def:5},
-  {id:'4-16-8',  inhale:4, hold:16, exhale:8,  def:5},
+  {id:'4-8-8',   inhale:4, hold:8,  exhale:8,  def:4},  /* 40s/R × 4 = 2分40秒 */
+  {id:'6-12-12', inhale:6, hold:12, exhale:12, def:3},  /* 60s/R × 3 = 3分00秒 */
+  {id:'4-16-8',  inhale:4, hold:16, exhale:8,  def:3},  /* 56s/R × 3 = 2分48秒 */
 ];
-const CHIPS=[5,8,12];
-const MIN_R=3, MAX_R=20;
+const CHIPS=[2,4,6,10];
+/* 1ラウンド＝左右1往復なので奇数でも左右非対称にならない（偶数制約は不要） */
+const MIN_R=1, MAX_R=20;
+/* 準備時間（姿勢ステップ）の選択肢。0＝なし */
+const PREPS=[0,3,5,10,15,20,30,60];
+/* 導入呼吸は固定（仕様書 §7.1）。吸う:吐く＝1:2 */
+const PREP_IN=3, PREP_EX=6, PREP_GAP=1;
 /* 目盛りは「秒数＝分割数」。本数で上限を切ると 4-16-8 の止める16秒のような
    標準プリセットまで消えるため、1マスの実寸(px)で判定する。 */
 const MIN_TICK_PX=8;
 const FS={s:.88,m:1,l:1.18};
-const BARW={s:'28px',m:'36px',l:'46px'};
+/* 「普通」が仕様書 §8.1 の規定値 32px。細い/太いは表示設定での利用者選択 */
+const BARW={s:'26px',m:'32px',l:'42px'};
 
 function phasesOf(p){
   return [
@@ -634,9 +738,10 @@ const DEF_STATE={
   onboarded:false,
   lang:'ja', theme:'dark', fs:'m', bar:'m',
   presetId:'4-8-8',
-  rounds:{'4-8-8':8,'6-12-12':5,'4-16-8':5,'custom':8},
+  rounds:{'4-8-8':4,'6-12-12':3,'4-16-8':3,'custom':4},
+  prepSeconds:5,
   custom:{inhale:4,hold:8,exhale:8},
-  settings:{sound:true,tick:false,vibe:true,voice:false,wake:true},
+  settings:{sound:true,tick:false,vibe:true,voice:false,wake:true,bg:true,bgm:false},
   streak:{count:0,last:null},
   history:[],
 };
@@ -674,6 +779,7 @@ function load(){
 
   const ids=[...PRESETS.map(p=>p.id),'custom'];
   S.presetId = pick1(o.presetId, ids, DEF_STATE.presetId);
+  S.prepSeconds = PREPS.includes(Number(o.prepSeconds)) ? Number(o.prepSeconds) : DEF_STATE.prepSeconds;
 
   if(o.rounds && typeof o.rounds==='object'){
     ids.forEach(id=>{ if(id in o.rounds) S.rounds[id]=num(o.rounds[id],MIN_R,MAX_R,DEF_STATE.rounds[id]); });
@@ -773,6 +879,7 @@ function label(id){ return id==='custom'?t('u.custom'):id; }
 let cur='home';
 function go(id){
   if(cur==='session'&&id!=='session') stopSession();
+  if(cur==='prep'&&id!=='prep') stopPrep();
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
   cur=id;
   if(id==='home') renderHome();
@@ -856,8 +963,154 @@ function renderHome(){
   hNm.textContent=label(p.id);
   hRatio.innerHTML=ratioHTML(p);
   hMeta.textContent=metaLine(p,r);
-  hStreak.innerHTML = S.streak.count>0 ? FLAME+streakText(S.streak.count) : t('home.nostreak');
+  hStreak.innerHTML = S.streak.count>0 ? FLAME+esc(streakText(S.streak.count)) : esc(t('home.nostreak'));
+  renderPrepPicker();
 }
+
+/* =========================================================
+   準備時間ピッカー（仕様書 §3）
+   選択ピルは中央に固定し、値のほうが流れる。
+   ========================================================= */
+const PICK_W=62;
+function prepLabelOf(v){ return v===0 ? t('prep.none') : v+'s'; }
+function renderPrepPicker(){
+  const spacer='<div style="flex:none;width:calc(50% - '+(PICK_W/2)+'px)"></div>';
+  prepScroll.innerHTML = spacer +
+    PREPS.map(v=>'<div class="pick-item" data-v="'+v+'">'+esc(prepLabelOf(v))+'</div>').join('') + spacer;
+  markPrep();
+  /* レイアウト確定後に現在値まで送る（初期描画では幅が未確定なため） */
+  requestAnimationFrame(()=>{
+    const i=Math.max(0,PREPS.indexOf(S.prepSeconds));
+    prepScroll.scrollLeft=i*PICK_W;
+    markPrep();
+  });
+  updatePrepWarn();
+}
+function markPrep(){
+  [...prepScroll.querySelectorAll('.pick-item')].forEach(n=>{
+    n.classList.toggle('on', Number(n.dataset.v)===S.prepSeconds);
+  });
+}
+prepScroll.addEventListener('scroll',()=>{
+  const i=Math.round(prepScroll.scrollLeft/PICK_W);
+  const v=PREPS[Math.max(0,Math.min(PREPS.length-1,i))];
+  if(v!==S.prepSeconds){
+    S.prepSeconds=v; save(); markPrep(); updatePrepWarn();
+    vibe(5);                     /* 1目盛りごとの軽いハプティクス */
+  }
+});
+/* タップでもその値に送れるようにする（スクロールだけだと細かい調整がしづらい） */
+prepScroll.addEventListener('click',e=>{
+  const it=e.target.closest('[data-v]'); if(!it) return;
+  const i=PREPS.indexOf(Number(it.dataset.v));
+  if(i>=0) prepScroll.scrollTo({left:i*PICK_W,behavior:'smooth'});
+});
+
+/* 仕様書 §12.1：音もバイブもOFFだと準備時間の終了に気づけず機能が無意味になる。
+   設定画面まで行かないと気づけない作りにしないため、その場で警告を出す。 */
+function updatePrepWarn(){
+  const silent = !S.settings.sound && !S.settings.vibe;
+  const show = silent && S.prepSeconds>3;
+  prepWarn.className='pick-note'+(show?' on':'');
+  prepWarn.innerHTML = show
+    ? esc(t('prep.warn'))+' <u data-go="notif">'+esc(t('prep.warnLink'))+'</u>'
+    : '';
+}
+
+/* =========================================================
+   準備シーケンス（仕様書 §7）
+   ========================================================= */
+function prepSteps(){
+  const a=[];
+  if(S.prepSeconds>0) a.push({k:'posture',dur:S.prepSeconds,lab:'prep.posture'});
+  a.push({k:'in', dur:PREP_IN, lab:'prep.in', vo:'prep.voIn'});
+  a.push({k:'ex', dur:PREP_EX, lab:'prep.ex', vo:'prep.voEx'});
+  a.push({k:'gap',dur:PREP_GAP,lab:'prep.gap',vo:'prep.voGap'});
+  return a;
+}
+const prun={active:false,steps:null,idx:0,t0:0,raf:0};
+const pel={top:document.getElementById('pTop'),left:document.getElementById('pLeft'),right:document.getElementById('pRight')};
+
+function startPrep(){
+  prun.steps=prepSteps(); prun.idx=0; prun.active=true;
+  audio(); wakeOn();
+  go('prep');
+  prepEnter();
+  prun.t0=performance.now();
+  prepLoop();
+}
+function stopPrep(){ prun.active=false; cancelAnimationFrame(prun.raf); }
+
+function prepEnter(){
+  const st=prun.steps[prun.idx];
+  prepLabel.textContent=t(st.lab);
+  prepLabel.style.color = st.k==='in' ? 'var(--c-in)' : (st.k==='ex' ? 'var(--c-ex)' : 'var(--muted)');
+  if(S.settings.sound) ping(st.k==='ex'?523:660,.34,.07);
+  vibe(30);
+  if(st.vo) speak(t(st.vo));
+  /* 目盛りは吸う3分割・吐く6分割。段が変わる時だけ作り直す */
+  [pel.left,pel.right].forEach(n=>{
+    clearTicks(n);
+    if(st.k==='in'||st.k==='ex') buildTicks(n,n.querySelector('.fill'),'v',{dur:st.dur});
+  });
+  prepPaint(st,0);
+}
+
+function prepPaint(st,p){
+  const fl=pel.left.querySelector('.fill'), fr=pel.right.querySelector('.fill'), ft=pel.top.querySelector('.fill');
+  pel.left.className='tube v l'; pel.right.className='tube v r'; pel.top.className='tube h';
+  prepNum.style.display='none';
+
+  if(st.k==='posture'){
+    /* 満タン＋薄く＝「充填済み、まだ動かない」 */
+    pel.left.className+=' act'; pel.right.className+=' act'; pel.top.className+=' fut';
+    const s='position:absolute;inset:3px;border-radius:5px;opacity:.38;background:var(--c-in)';
+    fl.style.cssText=s; fr.style.cssText=s; ft.style.cssText='display:none';
+    prepNum.style.display='';
+    prepNum.textContent=Math.max(1,Math.ceil(st.dur-p*st.dur));
+    return;
+  }
+  if(st.k==='gap'){
+    /* 本編①の開始状態（左のみ満タン）に整え、「次は左」の予告も兼ねる */
+    pel.left.className+=' act'; pel.right.className+=' fut'; pel.top.className+=' fut';
+    fl.style.cssText='position:absolute;inset:3px;border-radius:5px;background:var(--c-in)';
+    fr.style.cssText='display:none'; ft.style.cssText='display:none';
+    return;
+  }
+
+  const col = st.k==='in' ? 'var(--c-in)' : 'var(--c-ex)';
+  const h   = st.k==='in' ? (1-p) : p;          /* 吸う＝減る / 吐く＝増える */
+  pel.left.className+=' act'; pel.right.className+=' act'; pel.top.className+=' act';
+  const vs='position:absolute;left:3px;right:3px;top:3px;border-radius:5px;overflow:hidden;background:'+col+
+           ';height:calc((100% - 6px) * '+h+')';
+  fl.style.cssText=vs; fr.style.cssText=vs;
+
+  /* 上辺：吸う＝左右の端から中央へ満ちる／吐く＝その逆再生（中央から左右へ消える） */
+  const P = st.k==='in' ? 50*p : 50*(1-p);
+  ft.style.cssText='position:absolute;inset:3px;border-radius:5px;background:linear-gradient(to right,'+
+    col+' 0%,'+col+' '+P+'%,transparent '+P+'%,transparent '+(100-P)+'%,'+col+' '+(100-P)+'%,'+col+' 100%)';
+}
+
+function prepLoop(){
+  if(!prun.active) return;
+  const st=prun.steps[prun.idx];
+  const e=(performance.now()-prun.t0)/1000;
+  const p=st.dur>0 ? Math.min(1,e/st.dur) : 1;
+  prepPaint(st,p);
+  if(e>=st.dur){
+    prun.idx++;
+    if(prun.idx>=prun.steps.length){ stopPrep(); startSession(); return; }
+    prun.t0=performance.now();
+    prepEnter();
+  }
+  prun.raf=requestAnimationFrame(prepLoop);
+}
+/* 画面タップでスキップ＝即開始（一時停止ではない） */
+document.getElementById('prep').addEventListener('click',e=>{
+  if(e.target.closest('#prepCancel')) return;
+  stopPrep(); startSession();
+});
+document.getElementById('prepCancel').onclick=e=>{ e.stopPropagation(); stopPrep(); wakeOff(); go('home'); };
 
 /* =========================================================
    プリセット一覧
@@ -946,7 +1199,12 @@ function renderToggles(){
     r.querySelector('.sw').className='sw '+(S.settings[r.dataset.tg]?'on':'off');
   });
 }
-function toggle(k){ S.settings[k]=!S.settings[k]; save(); renderToggles(); if(k==='sound'&&S.settings[k]) ping(660,.3,.06); }
+function toggle(k){
+  S.settings[k]=!S.settings[k]; save(); renderToggles();
+  if(k==='sound'&&S.settings[k]) ping(660,.3,.06);
+  /* 音/バイブの変更は §12.1 の警告条件に直結するので即座に反映する */
+  if(k==='sound'||k==='vibe') updatePrepWarn();
+}
 
 /* =========================================================
    履歴
@@ -1125,14 +1383,27 @@ function nextPhase(){
   return run.ph[run.idx].dur>0;
 }
 
+/* 仕様書 §8.6：ラウンド数が13以上ならドット列をやめ、連続バー＋テキストに切り替える
+   （13個以上は1個が細くなりすぎて現在位置を読み取れないため） */
 function buildDots(){
   const n=run.rounds;
-  const w=Math.max(6,Math.min(19,Math.floor((208-(n-1)*5)/n)));
+  if(n>=13){
+    el.dots.innerHTML='<div class="rbar"><div class="rbar-fill" id="rbarFill"></div></div>'+
+                      '<div class="rbar-tx" id="rbarTx"></div>';
+    return;
+  }
+  const w=Math.max(6,Math.min(19,Math.floor((180-(n-1)*5)/n)));
   /* data-i は i18n 用セレクタなのでドットには付けない（翻訳処理に拾われて文字が入る） */
   el.dots.innerHTML=Array.from({length:n},()=>
     '<span class="dot" style="width:'+w+'px"></span>').join('');
 }
 function updDots(){
+  if(run.rounds>=13){
+    const f=document.getElementById('rbarFill'), x=document.getElementById('rbarTx');
+    if(f) f.style.width=(run.round/run.rounds*100).toFixed(2)+'%';
+    if(x) x.textContent=t('sess.round')+' '+(run.round+1)+' / '+run.rounds;
+    return;
+  }
   [...el.dots.children].forEach((d,i)=>{
     d.className='dot'+(i<run.round?' dn':(i===run.round?' cur':''));
   });
@@ -1147,7 +1418,9 @@ function loop(){
   const tt=ph.dur>0 ? Math.min(1,e/ph.dur) : 1;
 
   layout(tt);
-  el.num.textContent=Math.min(ph.dur,Math.floor(e)+1);
+  /* 仕様書 §8.6：残り秒を表示する（経過ではない）。
+     1秒未満を切り上げるので dur→1 と数え下がり、0は出ない。 */
+  el.num.textContent=Math.max(1,Math.ceil(ph.dur-e));
 
   const sec=Math.floor(e);
   if(S.settings.tick&&sec!==run.tick&&sec>0&&sec<ph.dur){ ping(1180,.045,.028); vibe(8); }
@@ -1213,8 +1486,8 @@ function finish(){
 }
 function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
-document.getElementById('btnStart').onclick=startSession;
-document.getElementById('dAgain').onclick=startSession;
+document.getElementById('btnStart').onclick=startPrep;
+document.getElementById('dAgain').onclick=startPrep;
 
 /* =========================================================
    起動
