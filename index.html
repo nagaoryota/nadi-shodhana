@@ -213,6 +213,8 @@ body{
 .rnm{font-size:calc(13.5px * var(--fs));font-weight:600;}
 .rds{font-size:calc(10.5px * var(--fs));color:var(--dim);margin-top:3px;line-height:1.5;}
 .sub{padding-left:15px;border-left:2px solid var(--softbd);}
+.upd-st{font-size:calc(11px * var(--fs));color:var(--muted);flex:none;text-align:right;max-width:46%;}
+.upd-st.go{color:var(--action);font-weight:700;}
 .sw{width:44px;height:24px;border-radius:13px;position:relative;flex:none;transition:background .18s;}
 .sw.on{background:var(--action);}
 .sw.off{background:var(--swoff);border:1.5px solid var(--swoffbd);}
@@ -483,6 +485,11 @@ body{
       <button class="row" data-go="display"><span class="rnm" data-i="hub.display"></span><span class="cv">›</span></button>
       <button class="row" data-go="history"><span class="rnm" data-i="hub.data"></span><span class="cv">›</span></button>
       <button class="row" data-go="about"><span class="rnm" data-i="hub.about"></span><span class="cv">›</span></button>
+      <!-- 遷移ではなく動作なので › を付けず、右側は状態表示にする -->
+      <button class="row" id="btnUpdate">
+        <div><div class="rnm" data-i="hub.update"></div><div class="rds" id="updVer"></div></div>
+        <span class="upd-st" id="updSt"></span>
+      </button>
     </div>
   </section>
 
@@ -613,6 +620,8 @@ ja:{
  'custom.inhale':'吸う（秒）','custom.hold':'止める（秒）','custom.exhale':'吐く（秒）',
  'custom.rounds':'ラウンド数','custom.use':'このプリセットを使う','custom.desc':'秒数・ラウンド数を自由に設定',
  'hub.title':'設定','hub.notif':'通知設定','hub.display':'表示設定','hub.data':'データ・実施履歴','hub.about':'アプリについて',
+ 'hub.update':'システムを更新','upd.ver':'バージョン','upd.checking':'確認中…','upd.latest':'最新版です',
+ 'upd.found':'更新しています…','upd.offline':'オフラインのため確認できません','upd.failed':'確認できませんでした',
  'disp.lang':'言語','disp.theme':'テーマ','disp.fs':'文字の大きさ','disp.bar':'バーの太さ',
  'th.dark':'ダーク','th.light':'ライト',
  'fs.s':'小','fs.m':'中','fs.l':'大',
@@ -653,6 +662,8 @@ en:{
  'custom.inhale':'Inhale (sec)','custom.hold':'Hold (sec)','custom.exhale':'Exhale (sec)',
  'custom.rounds':'Rounds','custom.use':'Use this preset','custom.desc':'Set seconds and rounds freely',
  'hub.title':'Settings','hub.notif':'Notifications','hub.display':'Display','hub.data':'Data & history','hub.about':'About',
+ 'hub.update':'Update app','upd.ver':'Version','upd.checking':'Checking…','upd.latest':'Up to date',
+ 'upd.found':'Updating…','upd.offline':'Offline — cannot check','upd.failed':'Could not check',
  'disp.lang':'Language','disp.theme':'Theme','disp.fs':'Text size','disp.bar':'Bar thickness',
  'th.dark':'Dark','th.light':'Light',
  'fs.s':'Small','fs.m':'Medium','fs.l':'Large',
@@ -687,6 +698,10 @@ en:{
 function t(k){ return (T[S.lang]&&T[S.lang][k]) || T.ja[k] || k; }
 
 const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 6 8.5 6 13a6 6 0 0 0 12 0c0-2.3-1-4.2-2.3-5.8-.4 1.3-1.1 2.1-1.9 2.1-1 0-1.6-.8-1.4-2C12.6 5.6 12.3 3.8 12 2z" fill="currentColor"/></svg>';
+
+/* 公開するたびに上げる。設定の「システムを更新」が
+   サーバー上の index.html からこの値を読み出して比較する。 */
+const APP_VERSION='1.1.0';
 
 /* =========================================================
    定数
@@ -886,6 +901,7 @@ function go(id){
   if(id==='presets') renderPresets();
   if(id==='custom') renderCustom();
   if(id==='display') renderDisplay();
+  if(id==='hub') renderUpdateRow();
   if(id==='notif') renderToggles();
   if(id==='history') renderHistory();
   if(id==='onboard') renderOnboard();
@@ -1205,6 +1221,57 @@ function toggle(k){
   /* 音/バイブの変更は §12.1 の警告条件に直結するので即座に反映する */
   if(k==='sound'||k==='vibe') updatePrepWarn();
 }
+
+/* =========================================================
+   システムの更新（設定ハブ）
+   Service Worker はキャッシュを持つため、放っておくと新版は
+   「次に2回起動したとき」までしか反映されない。ここから即座に
+   取り直せるようにする。
+   ========================================================= */
+let updBusy=false;
+function renderUpdateRow(){
+  updVer.textContent=t('upd.ver')+' '+APP_VERSION;
+  if(!updBusy){ updSt.textContent=''; updSt.className='upd-st'; }
+}
+function updMsg(key,go){
+  updSt.textContent=t(key);
+  updSt.className='upd-st'+(go?' go':'');
+}
+async function doUpdate(){
+  if(updBusy) return;
+  updBusy=true;
+  updMsg('upd.checking');
+  try{
+    if(navigator.onLine===false){ updMsg('upd.offline'); return; }
+
+    /* サーバー上の index.html を必ずネットワークから取り、版番号を読む */
+    const res=await fetch('index.html?cb='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('http '+res.status);
+    const m=(await res.text()).match(/APP_VERSION\s*=\s*'([^']+)'/);
+    if(!m) throw new Error('version not found');
+
+    if(m[1]===APP_VERSION){ updMsg('upd.latest'); return; }
+
+    /* 新版がある：SWを更新し、キャッシュを捨ててから読み直す */
+    updMsg('upd.found',true);
+    if('serviceWorker' in navigator){
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg){ try{ await reg.update(); }catch(e){} }
+    }
+    if(window.caches){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    location.reload();
+  }catch(e){
+    updMsg('upd.failed');
+  }finally{
+    /* 再読み込みが走る場合はここに来ないので、戻った時だけ解除する */
+    updBusy=false;
+    setTimeout(()=>{ if(!updBusy) renderUpdateRow(); },3200);
+  }
+}
+document.getElementById('btnUpdate').onclick=doUpdate;
 
 /* =========================================================
    履歴
