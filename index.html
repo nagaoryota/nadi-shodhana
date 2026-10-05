@@ -711,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.1';
 
 /* =========================================================
    定数
@@ -1059,6 +1059,7 @@ const pel={top:document.getElementById('pTop'),left:document.getElementById('pLe
 
 function startPrep(){
   bowlStop();   /* 完了画面から続けて始めた場合、前回の余韻を断つ */
+  preloadVoice();
   prun.steps=prepSteps(); prun.idx=0; prun.active=true;
   audio(); wakeOn();
   go('prep');
@@ -1493,28 +1494,44 @@ const VOICE_FILE={
 const voiceMissing={}, voiceEl={};
 let curVoice=null;
 
-function speak(key){
-  if(!S.settings.voice) return;
-  stopVoice();
-  const name=VOICE_FILE[key];
-  const id=S.lang+'/'+name;
-  if(!name || voiceMissing[id]){ speakTTS(t(key)); return; }
-
+function voiceNode(id){
   let el=voiceEl[id];
   if(!el){
     el=new Audio('audio/'+id+'.mp3');
     el.preload='auto';
-    el.addEventListener('error',()=>{
-      /* ファイルが無い環境なので、以後はこのキーを読み上げで処理する */
-      voiceMissing[id]=true;
-      if(curVoice===el) speakTTS(t(key));
-    });
+    /* ファイル自体が読めない環境でだけ、以後このキーを読み上げに回す */
+    el.addEventListener('error',()=>{ voiceMissing[id]=true; });
     voiceEl[id]=el;
   }
+  return el;
+}
+function speak(key){
+  if(!S.settings.voice) return;
+  stopVoice();
+  const name=VOICE_FILE[key];
+  if(!name){ speakTTS(t(key)); return; }
+  const id=S.lang+'/'+name;
+  if(voiceMissing[id]){ speakTTS(t(key)); return; }
+
+  const el=voiceNode(id);
   curVoice=el;
   try{ el.currentTime=0; }catch(e){}
   const p=el.play();
-  if(p&&p.catch) p.catch(()=>{ voiceMissing[id]=true; if(curVoice===el) speakTTS(t(key)); });
+  if(p&&p.catch) p.catch(()=>{
+    /* 再生が弾かれただけなら今回だけ読み上げに回す。
+       ここで恒久的に無効化すると、一度の失敗でそのクリップが
+       セッション中ずっと鳴らなくなってしまう。 */
+    if(curVoice===el) speakTTS(t(key));
+  });
+}
+/* セッション開始（利用者の操作直後）に全クリップを先読みする。
+   初回再生時の読み込み待ちをなくし、取りこぼしを防ぐ。 */
+function preloadVoice(){
+  if(!S.settings.voice) return;
+  Object.keys(VOICE_FILE).forEach(k=>{
+    const id=S.lang+'/'+VOICE_FILE[k];
+    if(!voiceMissing[id]){ try{ voiceNode(id).load(); }catch(e){} }
+  });
 }
 function speakTTS(txt){
   if(!window.speechSynthesis) return;
