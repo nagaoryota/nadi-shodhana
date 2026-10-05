@@ -1,6 +1,6 @@
 /* ナディーショーダナ — Service Worker
    プロトタイプ用の最小構成。更新時は CACHE のバージョンを上げる。 */
-const CACHE = 'nadi-v13';
+const CACHE = 'nadi-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -40,6 +40,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+
+  // このハンドラは same-origin 専用。将来サードパーティへのリクエストが
+  // 追加されても、意図せずキャッシュされないようここで素通しする。
+  if (new URL(req.url).origin !== self.location.origin) return;
 
   // HTML はネットワーク優先（更新を取りこぼさない）、失敗したらキャッシュ
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {

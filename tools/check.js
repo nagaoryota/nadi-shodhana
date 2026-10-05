@@ -103,6 +103,42 @@ check('ラウンド数の説明文を定数から生成',
 check('比率バーが 0% を表現できる', /\.ratio>div\{[\s\S]*?min-width:0/.test(html));
 check('カスタムの既定ラウンド数が一元化', /def:DEF_STATE\.rounds\.custom/.test(script));
 
+/* ---- アクセシビリティ ---- */
+// クリックだけ付けた div は、キーボードでも支援技術でも到達できない。
+// 対話要素は button であることを機械的に担保する。
+check('クリック専用の div が残っていない',
+  !/<div class="row[^"]*" data-tg=/.test(html) && !/<div class="pick-item"/.test(html));
+check('通知トグルが role=switch', (html.match(/role="switch"/g) || []).length === 15,
+  (html.match(/role="switch"/g) || []).length + '件');
+check('トグルの状態を aria-checked で伝える', /setAttribute\('aria-checked',on\)/.test(script));
+check('プリセット選択が radiogroup/radio', /setAttribute\('role','radiogroup'\)/.test(script) && /role="radio"/.test(script));
+check('チップに選択状態がある', /aria-pressed/.test(script));
+check('アイコンのみのボタンに名前がある',
+  (html.match(/data-aria=/g) || []).length >= 5 && /setAttribute\('aria-label'/.test(script),
+  (html.match(/data-aria=/g) || []).length + '件');
+// button の中に button を置くと不正なHTMLになり、支援技術の読み取りも壊れる。
+// 静的マークアップ部分（script を除く）で開閉と入れ子を数える。
+const staticHtml = html.replace(/<script>[\s\S]*?<\/script>/, '');
+const nest = (() => {
+  let d = 0, bad = 0;
+  for (const m of staticHtml.matchAll(/<button\b|<\/button>/g)) {
+    if (m[0] === '</button>') d--; else { if (d > 0) bad++; d++; }
+  }
+  return { bad, d };
+})();
+check('静的HTMLに button の入れ子が無い', nest.bad === 0 && nest.d === 0,
+  '入れ子' + nest.bad + ' / 開閉差' + nest.d);
+// 動的生成側：プリセットの選択部分(psel)より後ろにチップを置いていること
+const presetTpl = script.match(/el\.innerHTML=([\s\S]*?)el\.addEventListener/)[1];
+check('プリセットの選択ボタンとチップが兄弟関係',
+  presetTpl.indexOf("</button>'") < presetTpl.indexOf('data-r='),
+  'psel を閉じてからチップ');
+
+/* ---- 自衛 ---- */
+check('フレーム埋め込みへの自衛がある', /self!==top/.test(script));
+check('SW が same-origin に限定されている', /origin !== self\.location\.origin/.test(sw));
+check('振動が使えない端末を考慮している', /canVibe/.test(script));
+
 /* ---- 版の整合 ---- */
 const ver = script.match(/const APP_VERSION='([^']+)'/)[1];
 const cache = sw.match(/const CACHE = '([^']+)'/)[1];

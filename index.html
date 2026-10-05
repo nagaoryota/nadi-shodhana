@@ -186,6 +186,15 @@ body{
   border:2px solid transparent;cursor:pointer;font-family:inherit;color:inherit;text-align:left;display:block;
 }
 .pcard.sel{border-color:var(--action);background:var(--sel-bg);}
+/* button 化に伴い、中の要素は span のままブロック配置にする */
+.psel,.pcard-btn{appearance:none;background:none;border:0;padding:0;margin:0;width:100%;
+                 font:inherit;color:inherit;text-align:left;cursor:pointer;display:block;}
+.pcard-btn{background:var(--card);border:2px solid transparent;border-radius:14px;
+           padding:13px 15px;margin-bottom:11px;}
+.pcard-btn.sel{border-color:var(--action);background:var(--sel-bg);}
+.psel .r1,.pcard-btn .r1{display:flex;justify-content:space-between;align-items:center;}
+.psel .ratio,.pcard-btn .ratio{display:flex;}
+.psel .pmt,.pcard-btn .pmt{display:block;}
 .pcard .r1{display:flex;justify-content:space-between;align-items:center;}
 .rn{display:flex;align-items:center;gap:9px;}
 .radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--radio);position:relative;flex:none;}
@@ -236,7 +245,8 @@ body{
   -webkit-overflow-scrolling:touch;
 }
 .pick-scroll::-webkit-scrollbar{display:none;}
-.pick-item{
+.pick-item{appearance:none;background:none;border:0;font-family:inherit;
+            
   flex:none;width:62px;text-align:center;scroll-snap-align:center;
   font-size:calc(13px * var(--fs));font-weight:700;color:var(--muted);
   transition:color .15s;
@@ -352,6 +362,9 @@ body{
 /* ---------- onboarding ---------- */
 .ob-ttl{font-size:calc(20px * var(--fs));font-weight:700;text-align:center;margin-top:20px;flex:none;}
 .ob-sub{font-size:calc(11.5px * var(--fs));color:var(--dim);text-align:center;margin-top:7px;flex:none;}
+/* 文中のリンク風ボタン。見た目は下線付きテキスト、操作は button */
+.linklike{appearance:none;background:none;border:0;padding:0;font:inherit;color:inherit;
+          text-decoration:underline;cursor:pointer;}
 .extnote{font-size:calc(10px * var(--fs));color:var(--dim);text-align:center;margin-top:10px;line-height:1.6;}
 a.btn{display:block;text-decoration:none;}
 .ob-steps{display:flex;gap:7px;justify-content:center;margin-top:16px;flex:none;}
@@ -376,34 +389,34 @@ a.btn{display:block;text-decoration:none;}
     </div>
 
     <div class="list" id="obStep2" style="display:none">
-      <div class="row" data-tg="sound">
+      <button type="button" class="row" role="switch" data-tg="sound">
         <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="breath">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="breath">
         <div><div class="rnm" data-i="nt.breath"></div><div class="rds" data-i="nt.breathD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row sub" data-tg="tick">
+      </button>
+      <button type="button" class="row sub" role="switch" data-tg="tick">
         <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="vibe">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="vibe">
         <div><div class="rnm" data-i="nt.vibe"></div><div class="rds" data-i="nt.vibeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="voice">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="voice">
         <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="wake">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="wake">
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="bg">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="bg">
         <div><div class="rnm" data-i="nt.bg"></div><div class="rds" data-i="nt.bgD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
+      </button>
     </div>
 
     <div class="btns">
@@ -414,7 +427,7 @@ a.btn{display:block;text-decoration:none;}
 
   <!-- ===== HOME ===== -->
   <section class="screen" id="home">
-    <div class="hdr"><span></span><button class="icobtn" data-go="hub">⚙︎</button></div>
+    <div class="hdr"><span></span><button class="icobtn" data-go="hub" data-aria="a11y.settings">⚙︎</button></div>
     <div class="logo" data-i="app.name"></div>
     <div class="logo-sub" data-i="app.sub"></div>
     <button class="start" id="btnStart" data-i="home.start"></button>
@@ -440,7 +453,7 @@ a.btn{display:block;text-decoration:none;}
 
   <!-- ===== 準備シーケンス（仕様書 §7） ===== -->
   <section class="screen" id="prep">
-    <div class="hdr"><button class="icobtn" id="prepCancel">←</button><span></span><span style="width:26px"></span></div>
+    <div class="hdr"><button class="icobtn" id="prepCancel" data-aria="a11y.cancel">←</button><span></span><span style="width:26px"></span></div>
     <div class="rigwrap">
       <div class="rig">
         <div class="tube h" id="pTop"><div class="fill"></div></div>
@@ -456,7 +469,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== PRESETS ===== -->
   <section class="screen" id="presets">
     <div class="hdr">
-      <button class="icobtn" data-go="home">←</button>
+      <button class="icobtn" data-go="home" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="preset.title"></span><span style="width:26px"></span>
     </div>
     <div class="hdr-note" data-i="preset.note"></div>
@@ -466,7 +479,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== CUSTOM ===== -->
   <section class="screen" id="custom">
     <div class="hdr">
-      <button class="icobtn" data-go="presets">←</button>
+      <button class="icobtn" data-go="presets" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="custom.title"></span><span style="width:26px"></span>
     </div>
     <div class="hdr-note" data-i="custom.note"></div>
@@ -484,7 +497,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== SETTINGS HUB ===== -->
   <section class="screen" id="hub">
     <div class="hdr">
-      <button class="icobtn" data-go="home">←</button>
+      <button class="icobtn" data-go="home" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.title"></span><span style="width:26px"></span>
     </div>
     <div class="list" style="margin-top:6px">
@@ -504,7 +517,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== DISPLAY ===== -->
   <section class="screen" id="display">
     <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
+      <button class="icobtn" data-go="hub" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.display"></span><span style="width:26px"></span>
     </div>
     <div class="list" style="margin-top:14px">
@@ -521,54 +534,54 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== NOTIFICATIONS ===== -->
   <section class="screen" id="notif">
     <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
+      <button class="icobtn" data-go="hub" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.notif"></span><span style="width:26px"></span>
     </div>
     <div class="list" style="margin-top:6px">
-      <div class="row" data-tg="sound">
+      <button type="button" class="row" role="switch" data-tg="sound">
         <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="breath">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="breath">
         <div><div class="rnm" data-i="nt.breath"></div><div class="rds" data-i="nt.breathD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row sub" data-tg="tick">
+      </button>
+      <button type="button" class="row sub" role="switch" data-tg="tick">
         <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="vibe">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="vibe">
         <div><div class="rnm" data-i="nt.vibe"></div><div class="rds" data-i="nt.vibeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="voice">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="voice">
         <div><div class="rnm" data-i="nt.voice"></div><div class="rds" data-i="nt.voiceD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
+      </button>
       <div class="sub" style="padding:12px 0 14px 15px;">
         <div class="chip-lb" style="margin-top:0" data-i="nt.voiceKind"></div>
         <div class="chips" id="vkChips"></div>
         <div class="rds" id="vkDesc" style="margin-top:8px"></div>
       </div>
-      <div class="row" data-tg="wake">
+      <button type="button" class="row" role="switch" data-tg="wake">
         <div><div class="rnm" data-i="nt.wake"></div><div class="rds" data-i="nt.wakeD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="bg">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="bg">
         <div><div class="rnm" data-i="nt.bg"></div><div class="rds" data-i="nt.bgD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
-      <div class="row" data-tg="bgm">
+      </button>
+      <button type="button" class="row" role="switch" data-tg="bgm">
         <div><div class="rnm" data-i="nt.bgm"></div><div class="rds" data-i="nt.bgmD"></div></div>
         <div class="sw"><div class="kb"></div></div>
-      </div>
+      </button>
     </div>
   </section>
 
   <!-- ===== HISTORY ===== -->
   <section class="screen" id="history">
     <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
+      <button class="icobtn" data-go="hub" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.data"></span><span style="width:26px"></span>
     </div>
     <div class="list" id="hList" style="margin-top:12px"></div>
@@ -578,7 +591,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== ABOUT ===== -->
   <section class="screen" id="about">
     <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
+      <button class="icobtn" data-go="hub" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.about"></span><span style="width:26px"></span>
     </div>
     <div class="list"><div class="about" id="aboutBody"></div></div>
@@ -587,7 +600,7 @@ a.btn{display:block;text-decoration:none;}
   <!-- ===== 支援 ===== -->
   <section class="screen" id="support">
     <div class="hdr">
-      <button class="icobtn" data-go="hub">←</button>
+      <button class="icobtn" data-go="hub" data-aria="a11y.back">←</button>
       <span class="ttl" data-i="hub.support"></span><span style="width:26px"></span>
     </div>
     <div class="list"><div class="about" id="supportBody"></div></div>
@@ -652,7 +665,8 @@ ja:{
  'custom.inhale':'吸う（秒）','custom.hold':'止める（秒）','custom.exhale':'吐く（秒）',
  'custom.rounds':'ラウンド数','custom.use':'このプリセットを使う','custom.desc':'秒数・ラウンド数を自由に設定',
  'hub.title':'設定','hub.notif':'通知設定','hub.display':'表示設定','hub.data':'データ・実施履歴','hub.about':'アプリについて',
- 'hub.support':'このアプリを支援する','hub.update':'システムを更新',
+ 'hub.support':'このアプリを支援する','hub.update':'最新版を確認',
+ 'a11y.back':'戻る','a11y.settings':'設定','a11y.cancel':'準備を中止',
  'support.open':'支援ページを開く','support.ext':'外部サイト（Buy Me a Coffee）が開きます',
  'support.body':'このアプリは無料で、広告も、利用状況の収集もありません。<br><br>続けて改善していくための支援をいただけると励みになります。もちろん、支援がなくても機能に違いはありません。','upd.ver':'バージョン','upd.checking':'確認中…','upd.latest':'最新版です',
  'upd.found':'更新しています…','upd.offline':'オフラインのため確認できません','upd.failed':'確認できませんでした',
@@ -702,7 +716,8 @@ en:{
  'custom.inhale':'Inhale (sec)','custom.hold':'Hold (sec)','custom.exhale':'Exhale (sec)',
  'custom.rounds':'Rounds','custom.use':'Use this preset','custom.desc':'Set seconds and rounds freely',
  'hub.title':'Settings','hub.notif':'Notifications','hub.display':'Display','hub.data':'Data & history','hub.about':'About',
- 'hub.support':'Support this app','hub.update':'Update app',
+ 'hub.support':'Support this app','hub.update':'Check for updates',
+ 'a11y.back':'Back','a11y.settings':'Settings','a11y.cancel':'Cancel preparation',
  'support.open':'Open the support page','support.ext':'Opens an external site (Buy Me a Coffee)',
  'support.body':'This app is free. There are no ads and no usage tracking.<br><br>If you would like to support its continued development, it would mean a lot. Everything works the same either way.','upd.ver':'Version','upd.checking':'Checking…','upd.latest':'Up to date',
  'upd.found':'Updating…','upd.offline':'Offline — cannot check','upd.failed':'Could not check',
@@ -749,7 +764,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.7.2';
+const APP_VERSION='1.8.0';
 
 /* =========================================================
    定数
@@ -894,6 +909,8 @@ function applyDisplay(){
 }
 function applyLang(){
   document.querySelectorAll('[data-i]').forEach(n=>{ n.textContent=t(n.dataset.i); });
+  /* アイコンだけのボタンは読み上げても意味が伝わらないので名前を与える */
+  document.querySelectorAll('[data-aria]').forEach(n=>{ n.setAttribute('aria-label',t(n.dataset.aria)); });
   document.getElementById('aboutBody').innerHTML=t('about.body');
   document.getElementById('supportBody').innerHTML=t('support.body');
   document.getElementById('noseL').textContent=t('nose.l');
@@ -967,7 +984,8 @@ document.addEventListener('click',e=>{
    ========================================================= */
 function segs(box,opts,curVal,onPick){
   box.innerHTML=opts.map(o=>
-    '<button class="chip'+(o.v===curVal?' on':'')+'" data-v="'+o.v+'">'+o.l+'</button>').join('');
+    '<button type="button" class="chip'+(o.v===curVal?' on':'')+'" aria-pressed="'+(o.v===curVal)+
+    '" data-v="'+o.v+'">'+o.l+'</button>').join('');
   box.onclick=e=>{ const b=e.target.closest('[data-v]'); if(b) onPick(b.dataset.v); };
 }
 const OPT={
@@ -1043,7 +1061,8 @@ function prepLabelOf(v){ return v===0 ? t('prep.none') : v+'s'; }
 function renderPrepPicker(){
   const spacer='<div style="flex:none;width:calc(50% - '+(PICK_W/2)+'px)"></div>';
   prepScroll.innerHTML = spacer +
-    PREPS.map(v=>'<div class="pick-item" data-v="'+v+'">'+esc(prepLabelOf(v))+'</div>').join('') + spacer;
+    PREPS.map(v=>'<button type="button" class="pick-item" data-v="'+v+'" aria-pressed="'+
+      (v===S.prepSeconds)+'">'+esc(prepLabelOf(v))+'</button>').join('') + spacer;
   markPrep();
   /* レイアウト確定後に現在値まで送る（初期描画では幅が未確定なため） */
   requestAnimationFrame(()=>{
@@ -1055,7 +1074,9 @@ function renderPrepPicker(){
 }
 function markPrep(){
   [...prepScroll.querySelectorAll('.pick-item')].forEach(n=>{
-    n.classList.toggle('on', Number(n.dataset.v)===S.prepSeconds);
+    const on = Number(n.dataset.v)===S.prepSeconds;
+    n.classList.toggle('on', on);
+    n.setAttribute('aria-pressed', on);
   });
 }
 prepScroll.addEventListener('scroll',()=>{
@@ -1076,11 +1097,15 @@ prepScroll.addEventListener('click',e=>{
 /* 仕様書 §12.1：音もバイブもOFFだと準備時間の終了に気づけず機能が無意味になる。
    設定画面まで行かないと気づけない作りにしないため、その場で警告を出す。 */
 function updatePrepWarn(){
-  const silent = !S.settings.sound && !S.settings.vibe;
+  /* iOS Safari は navigator.vibrate を持たない。「バイブON・音OFF」が
+     実質無音になるため、振動が使えない端末では未設定と同じに扱う。 */
+  const canVibe = !!navigator.vibrate;
+  const silent = !S.settings.sound && !(S.settings.vibe && canVibe);
   const show = silent && S.prepSeconds>3;
   prepWarn.className='pick-note'+(show?' on':'');
   prepWarn.innerHTML = show
-    ? esc(t('prep.warn'))+' <u data-go="notif">'+esc(t('prep.warnLink'))+'</u>'
+    ? esc(t('prep.warn'))+' <button type="button" class="linklike" data-go="notif">'+
+      esc(t('prep.warnLink'))+'</button>'
     : '';
 }
 
@@ -1196,17 +1221,24 @@ document.getElementById('prepCancel').onclick=e=>{ e.stopPropagation(); stopPrep
 function renderPresets(){
   const box=document.getElementById('pList');
   box.innerHTML='';
+  box.setAttribute('role','radiogroup');
+  box.setAttribute('aria-label',t('preset.title'));
   PRESETS.forEach(p=>{
     const sel=S.presetId===p.id, r=roundsFor(p.id);
     const el=document.createElement('div');
     el.className='pcard'+(sel?' sel':'');
+    /* カード全体を button にすると中のチップ(button)が入れ子になり不正なHTMLになる。
+       選択部分だけを button(role=radio) にし、ラウンド数のチップはその外に置く。 */
     el.innerHTML=
-      '<div class="r1"><span class="rn"><span class="radio"></span><span class="pnm">'+p.id+'</span></span></div>'+
-      '<div class="ratio ind">'+ratioHTML(p)+'</div>'+
-      '<div class="pmt ind">'+metaLine(p,r)+'</div>'+
-      (sel? '<div class="chip-lb ind">'+t('preset.rounds')+'</div><div class="chips ind">'+
-            CHIPS.map(c=>'<button class="chip'+(c===r?' on':'')+'" data-r="'+c+'">'+c+'</button>').join('')+
-            '<button class="chip sm'+(CHIPS.includes(r)?'':' on')+'" data-other="1">'+
+      '<button type="button" class="psel" role="radio" aria-checked="'+sel+'">'+
+        '<span class="r1"><span class="rn"><span class="radio"></span><span class="pnm">'+p.id+'</span></span></span>'+
+        '<span class="ratio ind">'+ratioHTML(p)+'</span>'+
+        '<span class="pmt ind">'+metaLine(p,r)+'</span>'+
+      '</button>'+
+      (sel? '<div class="chip-lb ind" id="rl-'+p.id+'">'+t('preset.rounds')+'</div>'+
+            '<div class="chips ind" role="group" aria-labelledby="rl-'+p.id+'">'+
+            CHIPS.map(c=>'<button type="button" class="chip'+(c===r?' on':'')+'" aria-pressed="'+(c===r)+'" data-r="'+c+'">'+c+'</button>').join('')+
+            '<button type="button" class="chip sm'+(CHIPS.includes(r)?'':' on')+'" aria-pressed="'+!CHIPS.includes(r)+'" data-other="1">'+
               (CHIPS.includes(r)?t('preset.other'):r)+'</button></div>'
           :'');
     el.addEventListener('click',ev=>{
@@ -1217,13 +1249,15 @@ function renderPresets(){
     });
     box.appendChild(el);
   });
-  const c=document.createElement('div');
   const isC=S.presetId==='custom';
-  c.className='pcard'+(isC?' sel':'');
   const cp=presetById('custom'), cr=roundsFor('custom');
-  c.innerHTML='<div class="r1"><span class="pnm">'+t('u.custom')+'</span><span class="cv">›</span></div>'+
-    (isC? '<div class="ratio">'+ratioHTML(cp)+'</div><div class="pmt">'+metaLine(cp,cr)+'</div>'
-        : '<div class="pmt">'+t('custom.desc')+'</div>');
+  const c=document.createElement('button');
+  c.type='button';
+  c.className='pcard pcard-btn'+(isC?' sel':'');
+  /* カスタムは「選択」ではなく入力画面への遷移なので radio にしない */
+  c.innerHTML='<span class="r1"><span class="pnm">'+t('u.custom')+'</span><span class="cv">›</span></span>'+
+    (isC? '<span class="ratio">'+ratioHTML(cp)+'</span><span class="pmt">'+metaLine(cp,cr)+'</span>'
+        : '<span class="pmt">'+t('custom.desc')+'</span>');
   c.addEventListener('click',()=>go('custom'));
   box.appendChild(c);
 }
@@ -1275,7 +1309,9 @@ document.getElementById('cSave').onclick=()=>{
    ========================================================= */
 function renderToggles(){
   document.querySelectorAll('[data-tg]').forEach(r=>{
-    r.querySelector('.sw').className='sw '+(S.settings[r.dataset.tg]?'on':'off');
+    const on=!!S.settings[r.dataset.tg];
+    r.querySelector('.sw').className='sw '+(on?'on':'off');
+    r.setAttribute('aria-checked',on);
   });
   renderVoiceKind();
 }
@@ -1863,6 +1899,12 @@ document.getElementById('dAgain').onclick=startPrep;
 /* =========================================================
    起動
    ========================================================= */
+/* frame-ancestors はヘッダ専用で GitHub Pages では付けられないため、
+   最低限の自衛としてフレーム内に埋め込まれたらトップへ抜ける。
+   クロスオリジンで抜けられない場合は中身を見せない。 */
+try{ if(self!==top){ top.location.replace(self.location.href); } }
+catch(e){ document.documentElement.style.display='none'; }
+
 load();
 /* 初回のみ端末の言語を初期値として推定する */
 if(!S.onboarded && !localStorage.getItem('nadi')){
