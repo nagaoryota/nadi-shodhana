@@ -351,6 +351,8 @@ body{
 /* ---------- onboarding ---------- */
 .ob-ttl{font-size:calc(20px * var(--fs));font-weight:700;text-align:center;margin-top:20px;flex:none;}
 .ob-sub{font-size:calc(11.5px * var(--fs));color:var(--dim);text-align:center;margin-top:7px;flex:none;}
+.extnote{font-size:calc(10px * var(--fs));color:var(--dim);text-align:center;margin-top:10px;line-height:1.6;}
+a.btn{display:block;text-decoration:none;}
 .ob-steps{display:flex;gap:7px;justify-content:center;margin-top:16px;flex:none;}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--dot);}
 .sdot.on{background:var(--action);}
@@ -494,6 +496,7 @@ body{
         <div><div class="rnm" data-i="hub.update"></div><div class="rds" id="updVer"></div></div>
         <span class="upd-st" id="updSt"></span>
       </button>
+      <button class="row" data-go="support"><span class="rnm" data-i="hub.support"></span><span class="cv">›</span></button>
     </div>
   </section>
 
@@ -580,6 +583,21 @@ body{
     <div class="list"><div class="about" id="aboutBody"></div></div>
   </section>
 
+  <!-- ===== 支援 ===== -->
+  <section class="screen" id="support">
+    <div class="hdr">
+      <button class="icobtn" data-go="hub">←</button>
+      <span class="ttl" data-i="hub.support"></span><span style="width:26px"></span>
+    </div>
+    <div class="list"><div class="about" id="supportBody"></div></div>
+    <div class="btns">
+      <!-- 副ボタン様式。ティールは「開始」の色なので、支援を同じ視覚的重みにしない -->
+      <a class="btn s" id="supportLink" href="https://buymeacoffee.com/nagaoryota"
+         target="_blank" rel="noopener noreferrer" data-i="support.open"></a>
+      <div class="extnote" data-i="support.ext"></div>
+    </div>
+  </section>
+
   <!-- ===== SESSION ===== -->
   <section class="screen" id="session">
     <div class="s-head" id="sHead"></div>
@@ -633,7 +651,9 @@ ja:{
  'custom.inhale':'吸う（秒）','custom.hold':'止める（秒）','custom.exhale':'吐く（秒）',
  'custom.rounds':'ラウンド数','custom.use':'このプリセットを使う','custom.desc':'秒数・ラウンド数を自由に設定',
  'hub.title':'設定','hub.notif':'通知設定','hub.display':'表示設定','hub.data':'データ・実施履歴','hub.about':'アプリについて',
- 'hub.update':'システムを更新','upd.ver':'バージョン','upd.checking':'確認中…','upd.latest':'最新版です',
+ 'hub.support':'このアプリを支援する','hub.update':'システムを更新',
+ 'support.open':'支援ページを開く','support.ext':'外部サイト（Buy Me a Coffee）が開きます',
+ 'support.body':'このアプリは無料で、広告も、利用状況の収集もありません。<br><br>続けて改善していくための支援をいただけると励みになります。もちろん、支援がなくても機能に違いはありません。','upd.ver':'バージョン','upd.checking':'確認中…','upd.latest':'最新版です',
  'upd.found':'更新しています…','upd.offline':'オフラインのため確認できません','upd.failed':'確認できませんでした',
  'disp.lang':'言語','disp.theme':'テーマ','disp.fs':'文字の大きさ','disp.bar':'バーの太さ',
  'th.dark':'ダーク','th.light':'ライト',
@@ -681,7 +701,9 @@ en:{
  'custom.inhale':'Inhale (sec)','custom.hold':'Hold (sec)','custom.exhale':'Exhale (sec)',
  'custom.rounds':'Rounds','custom.use':'Use this preset','custom.desc':'Set seconds and rounds freely',
  'hub.title':'Settings','hub.notif':'Notifications','hub.display':'Display','hub.data':'Data & history','hub.about':'About',
- 'hub.update':'Update app','upd.ver':'Version','upd.checking':'Checking…','upd.latest':'Up to date',
+ 'hub.support':'Support this app','hub.update':'Update app',
+ 'support.open':'Open the support page','support.ext':'Opens an external site (Buy Me a Coffee)',
+ 'support.body':'This app is free. There are no ads and no usage tracking.<br><br>If you would like to support its continued development, it would mean a lot. Everything works the same either way.','upd.ver':'Version','upd.checking':'Checking…','upd.latest':'Up to date',
  'upd.found':'Updating…','upd.offline':'Offline — cannot check','upd.failed':'Could not check',
  'disp.lang':'Language','disp.theme':'Theme','disp.fs':'Text size','disp.bar':'Bar thickness',
  'th.dark':'Dark','th.light':'Light',
@@ -726,7 +748,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.6.0';
+const APP_VERSION='1.7.0';
 
 /* =========================================================
    定数
@@ -872,6 +894,7 @@ function applyDisplay(){
 function applyLang(){
   document.querySelectorAll('[data-i]').forEach(n=>{ n.textContent=t(n.dataset.i); });
   document.getElementById('aboutBody').innerHTML=t('about.body');
+  document.getElementById('supportBody').innerHTML=t('support.body');
   document.getElementById('noseL').textContent=t('nose.l');
   document.getElementById('noseR').textContent=t('nose.r');
 }
