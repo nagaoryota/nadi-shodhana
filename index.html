@@ -764,18 +764,18 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「最新版を確認」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.8.0';
+const APP_VERSION='1.9.0';
 
 /* =========================================================
    定数
    ========================================================= */
 /* 仕様書 v1.0 §4。既定ラウンド数は固定値ではなく初期値。 */
 const PRESETS=[
-  {id:'4-8-8',   inhale:4, hold:8,  exhale:8,  def:4},  /* 40s/R × 4 = 2分40秒 */
-  {id:'6-12-12', inhale:6, hold:12, exhale:12, def:3},  /* 60s/R × 3 = 3分00秒 */
-  {id:'4-16-8',  inhale:4, hold:16, exhale:8,  def:3},  /* 56s/R × 3 = 2分48秒 */
+  {id:'4-8-8',   inhale:4, hold:8,  exhale:8,  def:8},  /* 40s/R × 8 = 5分20秒 */
+  {id:'6-12-12', inhale:6, hold:12, exhale:12, def:8},  /* 60s/R × 8 = 8分00秒 */
+  {id:'4-16-8',  inhale:4, hold:16, exhale:8,  def:8},  /* 56s/R × 8 = 7分28秒 */
 ];
-const CHIPS=[2,4,6,10];
+const CHIPS=[4,6,8,10];
 /* 1ラウンド＝左右1往復なので奇数でも左右非対称にならない（偶数制約は不要） */
 const MIN_R=1, MAX_R=20;
 /* 準備時間（姿勢ステップ）の選択肢。0＝なし */
@@ -816,7 +816,7 @@ const DEF_STATE={
   onboarded:false,
   lang:'ja', theme:'dark', fs:'m', bar:'m',
   presetId:'4-8-8',
-  rounds:{'4-8-8':4,'6-12-12':3,'4-16-8':3,'custom':4},
+  rounds:{'4-8-8':8,'6-12-12':8,'4-16-8':8,'custom':8},
   prepSeconds:5,
   custom:{inhale:4,hold:8,exhale:8},
   settings:{sound:true,breath:true,tick:false,vibe:true,voice:true,wake:true,bg:true,bgm:false},

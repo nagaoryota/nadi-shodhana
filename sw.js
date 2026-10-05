@@ -1,6 +1,6 @@
 /* ナディーショーダナ — Service Worker
    プロトタイプ用の最小構成。更新時は CACHE のバージョンを上げる。 */
-const CACHE = 'nadi-v14';
+const CACHE = 'nadi-v15';
 const ASSETS = [
   './',
   './index.html',
