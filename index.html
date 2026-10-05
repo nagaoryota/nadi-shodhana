@@ -16,7 +16,7 @@
   connect-src 'self';
   manifest-src 'self';
   worker-src 'self';
-  media-src 'none';
+  media-src 'self';
   object-src 'none';
   base-uri 'none';
   form-action 'none';
@@ -377,6 +377,10 @@ body{
         <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
+      <div class="row" data-tg="breath">
+        <div><div class="rnm" data-i="nt.breath"></div><div class="rds" data-i="nt.breathD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
       <div class="row sub" data-tg="tick">
         <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
         <div class="sw"><div class="kb"></div></div>
@@ -521,6 +525,10 @@ body{
         <div><div class="rnm" data-i="nt.sound"></div><div class="rds" data-i="nt.soundD"></div></div>
         <div class="sw"><div class="kb"></div></div>
       </div>
+      <div class="row" data-tg="breath">
+        <div><div class="rnm" data-i="nt.breath"></div><div class="rds" data-i="nt.breathD"></div></div>
+        <div class="sw"><div class="kb"></div></div>
+      </div>
       <div class="row sub" data-tg="tick">
         <div><div class="rnm" data-i="nt.tick"></div><div class="rds" data-i="nt.tickD"></div></div>
         <div class="sw"><div class="kb"></div></div>
@@ -631,6 +639,7 @@ ja:{
  'nt.vibe':'バイブレーション','nt.vibeD':'画面を見なくても振動で分かる',
  'nt.voice':'音声ガイド','nt.voiceD':'「左から吸って」等を読み上げ',
  'nt.wake':'画面を消さない','nt.wakeD':'セッション中は自動ロックを抑止',
+ 'nt.breath':'呼吸音','nt.breathD':'吸う・吐くに合わせて息の音が動く',
  'nt.bgm':'BGM','nt.bgmD':'セッション中に環境音を再生',
  'nt.bg':'バックグラウンド継続','nt.bgD':'画面を消しても音と振動で進行する',
  'prep.label':'準備時間','prep.none':'なし','prep.skip':'画面をタップすると今すぐ始まります',
@@ -673,6 +682,7 @@ en:{
  'nt.vibe':'Vibration','nt.vibeD':'Feel each change without looking at the screen',
  'nt.voice':'Voice guide','nt.voiceD':'Reads out “Inhale through the left” and so on',
  'nt.wake':'Keep screen on','nt.wakeD':'Prevents auto-lock during a session',
+ 'nt.breath':'Breath sound','nt.breathD':'A soft breath sound that follows each inhale and exhale',
  'nt.bgm':'Background sound','nt.bgmD':'Play ambient sound during a session',
  'nt.bg':'Keep running in background','nt.bgD':'Continue with sound and vibration even when the screen is off',
  'prep.label':'Preparation','prep.none':'None','prep.skip':'Tap anywhere to start now',
@@ -701,7 +711,7 @@ const FLAME='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2C9 6 
 
 /* 公開するたびに上げる。設定の「システムを更新」が
    サーバー上の index.html からこの値を読み出して比較する。 */
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.2.0';
 
 /* =========================================================
    定数
@@ -756,7 +766,7 @@ const DEF_STATE={
   rounds:{'4-8-8':4,'6-12-12':3,'4-16-8':3,'custom':4},
   prepSeconds:5,
   custom:{inhale:4,hold:8,exhale:8},
-  settings:{sound:true,tick:false,vibe:true,voice:false,wake:true,bg:true,bgm:false},
+  settings:{sound:true,breath:true,tick:false,vibe:true,voice:false,wake:true,bg:true,bgm:false},
   streak:{count:0,last:null},
   history:[],
 };
@@ -1055,15 +1065,19 @@ function startPrep(){
   prun.t0=performance.now();
   prepLoop();
 }
-function stopPrep(){ prun.active=false; cancelAnimationFrame(prun.raf); }
+function stopPrep(){ prun.active=false; cancelAnimationFrame(prun.raf); breathStop(); stopVoice(); }
 
 function prepEnter(){
   const st=prun.steps[prun.idx];
   prepLabel.textContent=t(st.lab);
   prepLabel.style.color = st.k==='in' ? 'var(--c-in)' : (st.k==='ex' ? 'var(--c-ex)' : 'var(--muted)');
-  if(S.settings.sound) ping(st.k==='ex'?523:660,.34,.07);
+  if(S.settings.sound) bell(st.k==='ex'?BELL_EX:BELL_IN,2.6,.16);
   vibe(30);
-  if(st.vo) speak(t(st.vo));
+  if(st.vo) speak(st.vo);
+  /* 準備の導入呼吸にも呼吸音を乗せる */
+  if(st.k==='in')      breathPlay('inhale',st.dur);
+  else if(st.k==='ex') breathPlay('exhale',st.dur);
+  else                 breathStop();
   /* 目盛りは吸う3分割・吐く6分割。段が変わる時だけ作り直す */
   [pel.left,pel.right].forEach(n=>{
     clearTicks(n);
@@ -1217,7 +1231,7 @@ function renderToggles(){
 }
 function toggle(k){
   S.settings[k]=!S.settings[k]; save(); renderToggles();
-  if(k==='sound'&&S.settings[k]) ping(660,.3,.06);
+  if(k==='sound'&&S.settings[k]) bell(BELL_IN,2.2,.14);
   /* 音/バイブの変更は §12.1 の警告条件に直結するので即座に反映する */
   if(k==='sound'||k==='vibe') updatePrepWarn();
 }
@@ -1292,27 +1306,165 @@ document.getElementById('hClear').onclick=()=>{
 /* =========================================================
    音・振動・読み上げ
    ========================================================= */
-let actx=null;
+/* 鐘の基音。吸う＝明るく、止める＝控えめ、吐く＝最も低く収まる。
+   C5 / G4 / F4 で互いに協和するので、連続して鳴っても濁らない。 */
+const BELL_IN=523.25, BELL_HOLD=392.00, BELL_EX=349.23;
+
+let actx=null, noiseBuf=null;
 function audio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
-function ping(freq,dur,gain){
-  const a=audio(); if(!a) return;
-  if(a.state==='suspended') a.resume();
-  const o=a.createOscillator(), g=a.createGain();
-  o.type='sine'; o.frequency.value=freq;
-  g.gain.setValueAtTime(0,a.currentTime);
-  g.gain.linearRampToValueAtTime(gain,a.currentTime+.012);
-  g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);
-  o.connect(g); g.connect(a.destination);
-  o.start(); o.stop(a.currentTime+dur+.02);
+function resume(){ const a=audio(); if(a&&a.state==='suspended') a.resume(); return a; }
+
+/* ---- 倒鐘（シンギングボウル）の合成 ----
+   鐘の音が鐘らしいのは、倍音が整数倍ではなく非整数比で並ぶため。
+   サイン波1本では出ないので、ハム/プライム/三度/五度…を重ね、
+   高い部分音ほど速く減衰させる。撞木の当たる瞬間の音も短い
+   ノイズで足している。 */
+const BELL_PARTIALS=[
+  {r:0.50, g:0.32, d:1.00},
+  {r:1.00, g:1.00, d:0.92},
+  {r:1.19, g:0.52, d:0.52},   /* 三度。鐘特有の陰りを出す */
+  {r:1.50, g:0.32, d:0.38},
+  {r:2.00, g:0.26, d:0.28},
+  {r:2.66, g:0.13, d:0.18},
+  {r:3.54, g:0.07, d:0.12},
+];
+function bell(freq,dur,gain){
+  const a=resume(); if(!a) return;
+  const t0=a.currentTime;
+  const out=a.createGain(); out.gain.value=gain;
+  const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=freq*6; lp.Q.value=.4;
+  lp.connect(out); out.connect(a.destination);
+
+  BELL_PARTIALS.forEach((p,i)=>{
+    const o=a.createOscillator(), g=a.createGain();
+    o.type='sine';
+    o.frequency.value=freq*p.r;
+    o.detune.value=(i%2?1:-1)*(1.5+i*1.1);   /* わずかな揺らぎでうなりを作る */
+    const pd=Math.max(.08,dur*p.d);
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(p.g,t0+.006);
+    g.gain.exponentialRampToValueAtTime(.0001,t0+pd);
+    o.connect(g); g.connect(lp);
+    o.start(t0); o.stop(t0+pd+.05);
+  });
+
+  /* 撞木が当たる瞬間 */
+  try{
+    const len=Math.floor(a.sampleRate*.035);
+    const buf=a.createBuffer(1,len,a.sampleRate), ch=buf.getChannelData(0);
+    for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2);
+    const n=a.createBufferSource(); n.buffer=buf;
+    const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq*2.4; bp.Q.value=1.1;
+    const ng=a.createGain(); ng.gain.value=gain*.22;
+    n.connect(bp); bp.connect(ng); ng.connect(a.destination);
+    n.start(t0);
+  }catch(e){}
+}
+/* 秒ごとのティック。鐘と混ざらないよう、ごく短い柔らかい点にする */
+function tickSound(){
+  const a=resume(); if(!a) return;
+  const t0=a.currentTime;
+  const o=a.createOscillator(), g=a.createGain(), lp=a.createBiquadFilter();
+  o.type='sine'; o.frequency.value=1320;
+  lp.type='lowpass'; lp.frequency.value=2600;
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(.022,t0+.004);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+.055);
+  o.connect(lp); lp.connect(g); g.connect(a.destination);
+  o.start(t0); o.stop(t0+.08);
+}
+
+/* ---- 呼吸音 ----
+   息そのものに近い帯域ノイズ。吸うときは中心周波数が上がりながら膨らみ、
+   吐くときは下がりながら減衰する。音階を持たないので鐘と喧嘩しない。 */
+let breath=null;
+function breathStop(){
+  if(!breath) return;
+  try{ breath.src.stop(); }catch(e){}
+  breath=null;
+}
+function breathPlay(kind,dur){
+  breathStop();
+  if(!S.settings.breath) return;
+  const a=resume(); if(!a||dur<=0) return;
+  if(!noiseBuf){
+    const len=Math.floor(a.sampleRate*2);
+    noiseBuf=a.createBuffer(1,len,a.sampleRate);
+    const ch=noiseBuf.getChannelData(0);
+    let last=0;
+    for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+w*.03)/1.03; ch[i]=last*3.2; }
+  }
+  const t0=a.currentTime, t1=t0+dur;
+  const src=a.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+  const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=.85;
+  const g=a.createGain();
+  const peak=.055;
+
+  if(kind==='inhale'){
+    bp.frequency.setValueAtTime(320,t0);
+    bp.frequency.linearRampToValueAtTime(950,t1);
+    g.gain.setValueAtTime(.0001,t0);
+    g.gain.linearRampToValueAtTime(peak,t0+dur*.65);
+    g.gain.linearRampToValueAtTime(.0001,t1);
+  }else{
+    bp.frequency.setValueAtTime(900,t0);
+    bp.frequency.linearRampToValueAtTime(260,t1);
+    g.gain.setValueAtTime(.0001,t0);
+    g.gain.linearRampToValueAtTime(peak,t0+dur*.22);
+    g.gain.linearRampToValueAtTime(.0001,t1);
+  }
+  src.connect(bp); bp.connect(g); g.connect(a.destination);
+  src.start(t0); src.stop(t1+.05);
+  breath={src:src};
 }
 function vibe(ms){ if(S.settings.vibe&&navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
-function speak(txt){
-  if(!S.settings.voice||!window.speechSynthesis) return;
-  try{ speechSynthesis.cancel();
+/* ---- 音声ガイド ----
+   録音ファイルがあればそれを再生し、無ければ端末の読み上げに落とす。
+   ファイルは audio/<lang>/<name>.mp3 に置く（README 参照）。
+   一度 404 を踏んだ組み合わせは覚えておき、毎回取りに行かない。 */
+const VOICE_FILE={
+  'vo.inL':'inhale-left', 'vo.inR':'inhale-right', 'vo.hold':'hold',
+  'vo.exL':'exhale-left', 'vo.exR':'exhale-right',
+  'prep.voIn':'prep-inhale', 'prep.voEx':'prep-exhale', 'prep.voGap':'prep-start',
+};
+const voiceMissing={}, voiceEl={};
+let curVoice=null;
+
+function speak(key){
+  if(!S.settings.voice) return;
+  stopVoice();
+  const name=VOICE_FILE[key];
+  const id=S.lang+'/'+name;
+  if(!name || voiceMissing[id]){ speakTTS(t(key)); return; }
+
+  let el=voiceEl[id];
+  if(!el){
+    el=new Audio('audio/'+id+'.mp3');
+    el.preload='auto';
+    el.addEventListener('error',()=>{
+      /* ファイルが無い環境なので、以後はこのキーを読み上げで処理する */
+      voiceMissing[id]=true;
+      if(curVoice===el) speakTTS(t(key));
+    });
+    voiceEl[id]=el;
+  }
+  curVoice=el;
+  try{ el.currentTime=0; }catch(e){}
+  const p=el.play();
+  if(p&&p.catch) p.catch(()=>{ voiceMissing[id]=true; if(curVoice===el) speakTTS(t(key)); });
+}
+function speakTTS(txt){
+  if(!window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(txt);
     u.lang = S.lang==='en' ? 'en-US' : 'ja-JP'; u.rate=1;
     speechSynthesis.speak(u);
   }catch(e){}
+}
+function stopVoice(){
+  if(curVoice){ try{ curVoice.pause(); curVoice.currentTime=0; }catch(e){} curVoice=null; }
+  if(window.speechSynthesis) try{ speechSynthesis.cancel(); }catch(e){}
 }
 
 let wl=null;
@@ -1356,9 +1508,13 @@ function enterPhase(first){
   run.tick=-1;
   updDots();
   layout(0);
-  if(S.settings.sound) ping(ph.k==='exhale'?523:(ph.k==='hold'?784:660),.34,.07);
+  if(S.settings.sound) bell(ph.k==='exhale'?BELL_EX:(ph.k==='hold'?BELL_HOLD:BELL_IN),2.6,.16);
   vibe(first?40:30);
-  speak(t(ph.vo));
+  speak(ph.vo);
+  /* 吸う・吐くに沿って息の音が動く。止めるときは鳴らさない */
+  if(ph.k==='inhale')      breathPlay('inhale',ph.dur);
+  else if(ph.k==='exhale') breathPlay('exhale',ph.dur);
+  else                     breathStop();
 }
 
 function layout(tt){
@@ -1490,7 +1646,7 @@ function loop(){
   el.num.textContent=Math.max(1,Math.ceil(ph.dur-e));
 
   const sec=Math.floor(e);
-  if(S.settings.tick&&sec!==run.tick&&sec>0&&sec<ph.dur){ ping(1180,.045,.028); vibe(8); }
+  if(S.settings.tick&&sec!==run.tick&&sec>0&&sec<ph.dur){ tickSound(); vibe(8); }
   if(sec!==run.tick) run.tick=sec;
 
   if(e>=ph.dur){
@@ -1507,6 +1663,7 @@ function pause(){
   run.acc+=performance.now()-run.t0;
   cancelAnimationFrame(run.raf);
   wakeOff();
+  breathStop(); stopVoice();
   const d=document.createElement('div');
   d.className='ovl'; d.id='pauseOvl';
   d.innerHTML='<h3>'+t('sess.paused')+'</h3><p>'+t('sess.round')+' '+(run.round+1)+' / '+run.rounds+'</p>'+
@@ -1514,7 +1671,16 @@ function pause(){
     '<button class="btn s">'+t('sess.end')+'</button></div>';
   document.getElementById('session').appendChild(d);
   const b=d.querySelectorAll('.btn');
-  b[0].onclick=ev=>{ ev.stopPropagation(); d.remove(); run.paused=false; run.t0=performance.now(); wakeOn(); loop(); };
+  b[0].onclick=ev=>{
+    ev.stopPropagation(); d.remove(); run.paused=false; run.t0=performance.now(); wakeOn();
+    /* 中断した分を除いた残り時間で呼吸音を鳴らし直す（最初から再生すると尺が合わない） */
+    const ph=run.ph[run.idx], rest=ph.dur-run.acc/1000;
+    if(rest>.3){
+      if(ph.k==='inhale')      breathPlay('inhale',rest);
+      else if(ph.k==='exhale') breathPlay('exhale',rest);
+    }
+    loop();
+  };
   b[1].onclick=ev=>{ ev.stopPropagation(); d.remove(); stopSession(); go('home'); };
 }
 document.getElementById('session').addEventListener('click',e=>{
@@ -1527,13 +1693,13 @@ function stopSession(){
   cancelAnimationFrame(run.raf);
   wakeOff();
   const o=document.getElementById('pauseOvl'); if(o) o.remove();
-  if(window.speechSynthesis) try{speechSynthesis.cancel();}catch(e){}
+  stopVoice(); breathStop();
 }
 
 function finish(){
   const p=run.p, total=roundSec(p)*run.rounds, rounds=run.rounds;
   stopSession();
-  if(S.settings.sound){ ping(880,.5,.08); setTimeout(()=>ping(1174,.6,.07),180); }
+  if(S.settings.sound){ bell(BELL_IN,3.4,.17); setTimeout(()=>bell(BELL_IN*1.5,4.2,.14),220); }
   vibe([40,60,40]);
   const today=new Date(), ds=ymd(today);
   if(S.streak.last!==ds){
